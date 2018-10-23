@@ -62,7 +62,7 @@ class Game():
         self.gamespeed = 4
 
     def update(self):
-        if randint(0,900) == 0:
+        if randint(0,200) == 0:
             self.layers[0] = [Item(self)] + self.layers[0]
         #    self.layers[1].append(Enemy(self, [randint(32,320-32),-64,32,32]))
         #UPDATE

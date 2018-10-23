@@ -58,6 +58,7 @@ class Game():
             "flowers": sheet(pygame.image.load("data/flowers.png"), (160,1)),
             "flower": sheet(pygame.image.load("data/flower.png"), (160,1)),
             "floor": sheet(pygame.image.load("data/floor.png"), (160,1)),
+            "facebeet": sheet(pygame.image.load("data/facebeet.png"), (160,1)),
         }
         self.xs = 1
         self.stripes = False
@@ -81,7 +82,7 @@ class Game():
 
         if randint(0,200) == 0:
             if self.current_image == None:
-                i = choice(("water", "pizza", "flower", "flowers", "floor"))
+                i = choice(("water", "pizza", "flower", "flowers", "floor", "facebeet"))
                 self.current_image = self.images[i]
                 self.image_y = 0
             else:

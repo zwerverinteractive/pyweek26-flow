@@ -54,10 +54,11 @@ class Item(Entity):
 
         self.rect[1] -= (self.root.player.speed[1]/32)*(self.distance/2)
 
-class Bullet(Entity):
+class Mouthbeams(Entity):
     def __init__(self, root, rect=[0,0,5,5]):
         Entity.__init__(self, root, rect)
-        self.surface.fill((0,0,255))
+        rc = (randint(128,255),randint(128,255),randint(128,255))
+        self.surface.fill(rc)
 
 class Enemy(Entity):
     def __init__(self, root, rect=[160+32,100+32,64,64]):
@@ -82,7 +83,6 @@ class Enemy(Entity):
             self.root.layers[4].append(self)
         elif self.distance > 64:
             self.root.layers[4].remove(self)
-
         self.rect[1] -= (self.root.player.speed[1]/32)*(self.distance/2)
 
 class Player(Entity):
@@ -102,6 +102,7 @@ class Player(Entity):
         self.pitch = 0
 
     def update(self):
+
         ix = int((self.rect[0]/320)*3)
         iy = int((self.rect[1]/200)*5)
         self.surface= self.images[iy][ix]

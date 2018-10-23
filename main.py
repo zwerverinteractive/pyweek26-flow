@@ -133,7 +133,6 @@ class Game():
         self.zwischen.blit(self.bg0, (0,0))
         self.zwischen.blit(pygame.transform.flip(self.bg0, True, False), (320/2, 0))
         a = abs(sin(self.dt/2)*255)
-        print(a)
         self.zwischen.set_alpha(120)
         #self.zwischen.fill((0,0,0), (0,0,320,64))
         #self.player.yaw += 0.1

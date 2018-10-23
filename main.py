@@ -3,6 +3,17 @@ from random import choice, randint
 from math import sin
 from entities import *
 
+def sheet(image, size):
+    l = []
+    img_size = image.get_size()
+    for y in range(int(img_size[1]/size)):
+        for x in range(int(img_size[0]/size)):
+            s = pygame.Surface((size, size))
+            s.blit(image, (-(x*size), -(y*size)))
+            s.set_colorkey((0,0,0))
+            l.append(s)
+    return l
+
 class Game():
     def __init__(self):
         pygame.init()
@@ -35,7 +46,8 @@ class Game():
         ]
 
         self.images = {
-            "sprite1" : pygame.image.load("data/sprite1.png")
+            "player" : pygame.image.load("data/player.png"),
+            "item" : sheet(pygame.image.load("data/item.png"), 64)
         }
         self.xs = 1
         self.stripes = False
@@ -44,14 +56,14 @@ class Game():
         self.bg1 = pygame.Surface((320/2,200))
 
         self.zwischen = pygame.Surface((320, 200))
-
         m = self.scale_mouse(pygame.mouse.get_pos())
         self.player = Player(self, [m[0],m[1],32,32])
-        self.layers[0].append(self.player)
+        self.layers[4].append(self.player)
         self.gamespeed = 4
 
     def update(self):
-        #if randint(0,100) == 0:
+        if randint(0,64) == 0:
+            self.layers[0] = [Item(self)] + self.layers[0]
         #    self.layers[1].append(Enemy(self, [randint(32,320-32),-64,32,32]))
         #UPDATE
         self.input()

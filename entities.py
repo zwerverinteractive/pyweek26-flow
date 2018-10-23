@@ -1,4 +1,5 @@
 import pygame
+from random import uniform
 from math import hypot
 
 def clamp(n,min,max):
@@ -19,6 +20,7 @@ class Entity():
         self.surface = pygame.Surface(self.rect[-2:])
         self.images = []
         self.speed = [0, 0]
+        self.offset = [0,0]
 
     def finalize(self):
         self.rect[0] += self.speed[0]
@@ -26,9 +28,30 @@ class Entity():
         self.center = [int(self.rect[0]-(self.rect[2]/2)), int(self.rect[1]-(self.rect[3]/2))]
 
 class Item(Entity):
-    def __init__(self, root, rect=[160,100,10,10]):
-        Entity.__init__(self, root, rect)
+    def __init__(self, root, rect=[160+32,100+32,64,64]):
+        Entity.__init__(self, root, rect[:])
+        self.images = self.root.images["item"]
+        sx, sy = 0.32, 0.2
+        self.speed = [uniform(-sx,sx), uniform(-sy,sy)]
         self.surface.fill((0,0,255))
+        self.frame = 0
+        self.distance = 1
+
+    def update(self):
+        self.surface = self.images[self.frame].copy()
+        self.distance = self.distance*1.01
+        d = int(self.distance)
+        self.surface = pygame.transform.scale(self.surface, (d,d))
+        self.frame += 1
+        if self.frame >= 22:
+            self.frame = 0
+        if self.distance > 40 and self in self.root.layers[0]:
+            self.root.layers[0].remove(self)
+            self.root.layers[4].append(self)
+        elif self.distance > 64:
+            self.root.layers[4].remove(self)
+
+        self.rect[1] -= (self.root.player.speed[1]/64)*self.distance
 
 class Bullet(Entity):
     def __init__(self, root, rect=[0,0,5,5]):
@@ -53,7 +76,7 @@ class Player(Entity):
             self.images.append([])
             for x in range(3):
                 s = pygame.Surface((32,32))
-                s.blit(self.root.images["sprite1"], (-(x*32), -(y*32)))
+                s.blit(self.root.images["player"], (-(x*32), -(y*32)))
                 s.set_colorkey((0,0,0))
                 self.images[y].append(s)
         self.surface = self.images[2][1]
@@ -78,5 +101,5 @@ class Player(Entity):
             dx, dy = 0, 0
         self.speed[0] = (dx)*(dist/10)
         self.speed[1] = (dy)*(dist/10)
-        self.yaw = (200 - (self.rect[1]/2))-50
+        self.yaw = (200 - (self.rect[1]/4))-50
         self.pitch = (320 - (self.rect[0]/2)-(320/4))

@@ -39,7 +39,7 @@ class Item(Entity):
 
     def update(self):
         self.surface = self.images[self.frame].copy()
-        self.distance = self.distance*1.01
+        self.distance = self.distance*1.02
         d = int(self.distance)
         self.surface = pygame.transform.scale(self.surface, (d,d))
         self.frame += 1
@@ -51,7 +51,7 @@ class Item(Entity):
         elif self.distance > 64:
             self.root.layers[4].remove(self)
 
-        self.rect[1] -= (self.root.player.speed[1]/64)*self.distance
+        self.rect[1] -= (self.root.player.speed[1]/32)*(self.distance/2)
 
 class Bullet(Entity):
     def __init__(self, root, rect=[0,0,5,5]):
@@ -101,5 +101,5 @@ class Player(Entity):
             dx, dy = 0, 0
         self.speed[0] = (dx)*(dist/10)
         self.speed[1] = (dy)*(dist/10)
-        self.yaw = (200 - (self.rect[1]/4))-50
+        self.yaw = (200 - (self.rect[1]/4))-75
         self.pitch = (320 - (self.rect[0]/2)-(320/4))

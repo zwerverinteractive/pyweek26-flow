@@ -47,7 +47,8 @@ class Game():
 
         self.images = {
             "player" : pygame.image.load("data/player.png"),
-            "item" : sheet(pygame.image.load("data/item.png"), 64)
+            "item" : sheet(pygame.image.load("data/item.png"), 64),
+            "eyes1": pygame.image.load("data/eyes.png")
         }
         self.xs = 1
         self.stripes = False
@@ -62,7 +63,7 @@ class Game():
         self.gamespeed = 4
 
     def update(self):
-        if randint(0,64) == 0:
+        if randint(0,900) == 0:
             self.layers[0] = [Item(self)] + self.layers[0]
         #    self.layers[1].append(Enemy(self, [randint(32,320-32),-64,32,32]))
         #UPDATE
@@ -102,9 +103,9 @@ class Game():
             x = 160-(w/2)
             self.bg0.fill(row[0], (x,0,w,bg0speed+2))
             self.bg1.fill(row[0], (x,0,w,bg0speed+2))
-        self.bg0.fill((0,0,0), (150,1,1,bg0speed+8))
+        self.bg0.fill((0,0,0), (140,1,20,bg0speed+8))
 
-        if randint(0,20) ==0:
+        if randint(0,500) ==0:
             if self.stripes: self.stripes = False
             else:
                 self.stripes = True
@@ -116,11 +117,21 @@ class Game():
                 self.bg0.fill(rc, (0,0,160,self.dd))
                 self.bg1.fill(rc, (0,3,160,self.dd))
 
+        if randint(0,500) == 0:
+            rc = (randint(0,255),randint(0,255),randint(0,255))
+            self.bg0.fill((0,0,0))
+        if randint(0,500) == 0:
+            rc = (randint(0,255),randint(0,255),randint(0,255))
+            self.bg1.fill(rc)
+
         self.zwischen.blit(self.bg1, (0,0))
         self.zwischen.blit(pygame.transform.flip(self.bg1, True, False), (320/2, 0))
 
-        self.zwischen.blit(self.bg0, (-10,0))
-        self.zwischen.blit(pygame.transform.flip(self.bg0, True, False), ((320/2)+10, 0))
+        self.zwischen.blit(self.bg0, (0,0))
+        self.zwischen.blit(pygame.transform.flip(self.bg0, True, False), (320/2, 0))
+        a = abs(sin(self.dt/2)*255)
+        print(a)
+        self.zwischen.set_alpha(80)
         #self.zwischen.fill((0,0,0), (0,0,320,64))
         #self.player.yaw += 0.1
         y = self.player.yaw

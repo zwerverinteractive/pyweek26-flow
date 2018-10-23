@@ -20,22 +20,27 @@ class Entity():
         self.surface = pygame.Surface(self.rect[-2:])
         self.images = []
         self.speed = [0, 0]
-        self.offset = [0,0]
+        self.size = [0,0]
         self.frame = 1
+        self.layer = 0
+        self.bullet = False
+        self.die = False
 
     def move_towards(self):
         self.surface = self.images[self.frame].copy()
         self.distance = self.distance*1.02
         d = int(self.distance)
         self.surface = pygame.transform.scale(self.surface, (d,d))
+        self.size = (d,d)
         self.frame += 1
         if self.frame >= len(self.images):
             self.frame = 0
-        if self.distance > 40 and self in self.root.layers[0]:
-            self.root.layers[0].remove(self)
-            self.root.layers[4].append(self)
-        elif self.distance > 64:
-            self.root.layers[4].remove(self)
+        if not int(self.distance/12) == self.layer:
+            self.root.layers[self.layer].remove(self)
+            self.layer = int(self.distance/12)
+            self.root.layers[self.layer].append(self)
+        if self.distance > 64 or self.die:
+            self.root.layers[self.layer].remove(self)
         self.rect[1] -= (self.root.player.speed[1]/32)*(self.distance/2)
 
     def move_from(self):
@@ -43,15 +48,16 @@ class Entity():
         self.distance = self.distance/1.02
         d = int(self.distance)
         self.surface = pygame.transform.scale(self.surface, (int(d/16),int(d/16)))
+        self.size = (int(d/16),int(d/16))
         self.frame += 1
         if self.frame >= len(self.images):
             self.frame = 0
-        if self.distance < 20 and self in self.root.layers[3]:
-            self.root.layers[3].remove(self)
-            self.root.layers[2].append(self)
-        elif self.distance < 10:
-            self.root.layers[2].remove(self)
-
+        if not int(self.distance/12) == self.layer:
+            self.root.layer_bulletsP[self.layer].remove(self)
+            self.layer = int(self.distance/12)
+            self.root.layer_bulletsP[self.layer].append(self)
+        if self.distance < 10 or self.die:
+            self.root.layer_bulletsP[self.layer].remove(self)
         self.rect[1] -= (self.root.player.speed[1]/32)*(self.distance/2)
 
     def finalize(self):
@@ -77,7 +83,7 @@ class Enemy(Entity):
     def __init__(self, root, rect=[160+32,100+32,64,64]):
         Entity.__init__(self, root, rect[:])
         self.images = self.root.images["active"]
-        sx, sy = 0.32, 0.2
+        sx, sy = 0.64, 0.2
         self.speed = [uniform(-sx,sx), uniform(-sy,sy)]
         self.surface.fill((0,0,255))
         self.frame = 0
@@ -85,6 +91,14 @@ class Enemy(Entity):
 
     def update(self):
         self.move_towards()
+        #HITBYBULLET
+        for b in self.root.layer_bulletsP[self.layer]:
+            s = 3
+            if b.rect[0] > (self.rect[0]-(self.size[0]/s)) and b.rect[0] < self.rect[0]+(self.size[0]/s):
+                if b.rect[1] < self.rect[1]+(self.size[1]/s) and b.rect[1] > self.rect[1]-(self.size[1]/s):
+                    b.die = True
+                    self.die = True
+
 
 class Player(Entity):
     def __init__(self, root, rect=[0,0,32,32]):
@@ -111,7 +125,7 @@ class Player(Entity):
             dx, dy, dist = speedangle(160,100,self.rect[0],self.rect[1])
             beam = Mouthbeams(self.root, [self.rect[0],self.rect[1], 5,5])
             beam.speed = [(dx*dist)/80,(dy*dist)/80]
-            self.root.layers[2].append(beam)
+            self.root.layer_bulletsP[4].append(beam)
 
         ix = int((self.rect[0]/320)*3)
         iy = int((self.rect[1]/200)*5)
@@ -131,6 +145,8 @@ class Mouthbeams(Entity):
         self.images = self.root.images["item"]
         self.surface.fill(rc)
         self.distance = 64
+        self.bullet = True
+        self.layer = 4
 
     def update(self):
         self.move_from()

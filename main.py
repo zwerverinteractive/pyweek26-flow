@@ -27,9 +27,12 @@ class Game():
         self.screen.set_alpha(50)
         self.buttons = [None, None, None, None, None]
         self.layers = []
+        self.layer_bulletsP = []
         self.xs = 0
         self.ys = 0
-        for i in range(5): self.layers.append([])
+        for i in range(6):
+            self.layers.append([])
+            self.layer_bulletsP.append([])
         self.setup()
         for i in range(200):
             self.update()
@@ -71,7 +74,8 @@ class Game():
         self.zwischen = pygame.Surface((320, 200))
         m = self.scale_mouse(pygame.mouse.get_pos())
         self.player = Player(self, [m[0],m[1],32,32])
-        self.layers[4].append(self.player)
+        self.layers[5].append(self.player)
+
         self.gamespeed = 4
 
     def update(self):
@@ -93,8 +97,11 @@ class Game():
         #UPDATE
         self.input()
         self.dt += 0.001
-        for layer in self.layers:
-            for entity in layer:
+        for l, layer in enumerate(self.layers):
+            for entity in self.layer_bulletsP[l]:
+                entity.update()
+                entity.finalize()                
+            for entity in self.layers[l]:
                 entity.update()
                 entity.finalize()
         #DRAW
@@ -169,8 +176,10 @@ class Game():
         f = pygame.transform.flip(self.zwischen, False, True)
         self.screen.blit(pygame.transform.scale(f, (320,int(y)+1)), (0, 0))
 
-        for layer in self.layers:
-            for entity in layer:
+        for l, layer in enumerate(self.layers):
+            for entity in self.layer_bulletsP[l]:
+                self.screen.blit(entity.surface, entity.center)
+            for entity in self.layers[l]:
                 self.screen.blit(entity.surface, entity.center)
 
     def start(self):

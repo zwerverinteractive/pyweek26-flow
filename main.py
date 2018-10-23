@@ -48,7 +48,6 @@ class Game():
         self.images = {
             "player" : pygame.image.load("data/player.png"),
             "item" : sheet(pygame.image.load("data/item.png"), 64),
-            "eyes1": pygame.image.load("data/eyes.png")
         }
         self.xs = 1
         self.stripes = False

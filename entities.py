@@ -52,7 +52,7 @@ class Entity():
         elif self.distance < 10:
             self.root.layers[2].remove(self)
 
-        #self.rect[1] -= (self.root.player.speed[1]/32)*(self.distance/2)
+        self.rect[1] -= (self.root.player.speed[1]/32)*(self.distance/2)
 
     def finalize(self):
         self.rect[0] += self.speed[0]
@@ -110,7 +110,7 @@ class Player(Entity):
             self.t = 0
             dx, dy, dist = speedangle(160,100,self.rect[0],self.rect[1])
             beam = Mouthbeams(self.root, [self.rect[0],self.rect[1], 5,5])
-            beam.speed = [dx,dy]
+            beam.speed = [(dx*dist)/80,(dy*dist)/80]
             self.root.layers[2].append(beam)
 
         ix = int((self.rect[0]/320)*3)

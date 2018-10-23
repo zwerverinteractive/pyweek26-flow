@@ -6,10 +6,10 @@ from entities import *
 def sheet(image, size):
     l = []
     img_size = image.get_size()
-    for y in range(int(img_size[1]/size)):
-        for x in range(int(img_size[0]/size)):
-            s = pygame.Surface((size, size))
-            s.blit(image, (-(x*size), -(y*size)))
+    for y in range(int(img_size[1]/size[1])):
+        for x in range(int(img_size[0]/size[0])):
+            s = pygame.Surface(size)
+            s.blit(image, (-(x*size[0]), -(y*size[1])))
             s.set_colorkey((0,0,0))
             l.append(s)
     return l
@@ -47,16 +47,25 @@ class Game():
 
         self.images = {
             "player" : pygame.image.load("data/player.png"),
-            "active" : sheet(pygame.image.load("data/active.png"), 64),
-            "item" : sheet(pygame.image.load("data/item.png"), 64),
-            "gem" : sheet(pygame.image.load("data/gem.png"), 64),
-            "itemrainbow" : sheet(pygame.image.load("data/itemrainbow.png"), 64),
+            "active" : sheet(pygame.image.load("data/active.png"), (64,64)),
+            "item" : sheet(pygame.image.load("data/item.png"), (64,64)),
+            "gem" : sheet(pygame.image.load("data/gem.png"), (64,64)),
+            "itemrainbow" : sheet(pygame.image.load("data/itemrainbow.png"), (64,64)),
+
+            #backgrounds
+            "water": sheet(pygame.image.load("data/water.png"), (160,1)),
+            "pizza": sheet(pygame.image.load("data/pizza.png"), (160,1)),
+            "flowers": sheet(pygame.image.load("data/flowers.png"), (160,1)),
+            "flower": sheet(pygame.image.load("data/flower.png"), (160,1)),
+            "floor": sheet(pygame.image.load("data/floor.png"), (160,1)),
         }
         self.xs = 1
         self.stripes = False
         self.bg0 = pygame.Surface((320/2,200))
         self.bg0.set_colorkey((0,0,0))
         self.bg1 = pygame.Surface((320/2,200))
+
+        self.current_image = None
 
         self.zwischen = pygame.Surface((320, 200))
         m = self.scale_mouse(pygame.mouse.get_pos())
@@ -69,6 +78,16 @@ class Game():
             self.layers[0] = [Enemy(self)] + self.layers[0]
         if randint(0,500) == 0:
             self.layers[0] = [Item(self)] + self.layers[0]
+
+        if randint(0,200) == 0:
+            if self.current_image == None:
+                i = choice(("water", "pizza", "flower", "flowers", "floor"))
+                self.current_image = self.images[i]
+                self.image_y = 0
+            else:
+                self.current_image = None
+
+
         #    self.layers[1].append(Enemy(self, [randint(32,320-32),-64,32,32]))
         #UPDATE
         self.input()
@@ -106,7 +125,7 @@ class Game():
             x = 160-(w/2)
             self.bg0.fill(row[0], (x,0,w,bg0speed+2))
             self.bg1.fill(row[0], (x,0,w,bg0speed+2))
-        #self.bg0.fill((0,0,0), (140,1,20,bg0speed+8))
+
 
         if randint(0,500) ==0:
             if self.stripes: self.stripes = False
@@ -114,6 +133,7 @@ class Game():
                 self.stripes = True
                 self.ff = choice((32,64,128,256))
                 self.dd = randint(1,20)
+
         if self.stripes:
             if self.dt%64:
                 rc = (randint(0,255),randint(0,255),randint(0,255))
@@ -127,6 +147,13 @@ class Game():
             rc = (randint(0,255),randint(0,255),randint(0,255))
             self.bg1.fill(rc)
 
+        if not self.current_image == None:
+            for i in range(bg0speed+2):
+                self.bg0.blit(self.current_image[self.image_y], (0,i))
+                self.bg1.blit(self.current_image[self.image_y], (0,i))
+                self.image_y += 1
+                if self.image_y >= len(self.current_image):
+                    self.image_y = 0
         self.zwischen.blit(self.bg1, (0,0))
         self.zwischen.blit(pygame.transform.flip(self.bg1, True, False), (320/2, 0))
 

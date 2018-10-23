@@ -1,5 +1,5 @@
 import pygame
-from random import uniform
+from random import choice, uniform
 from math import hypot
 
 def clamp(n,min,max):
@@ -30,7 +30,8 @@ class Entity():
 class Item(Entity):
     def __init__(self, root, rect=[160+32,100+32,64,64]):
         Entity.__init__(self, root, rect[:])
-        self.images = self.root.images["item"]
+        s = choice(("item", "gem", "itemrainbow"))
+        self.images = self.root.images[s]
         sx, sy = 0.32, 0.2
         self.speed = [uniform(-sx,sx), uniform(-sy,sy)]
         self.surface.fill((0,0,255))
@@ -59,14 +60,30 @@ class Bullet(Entity):
         self.surface.fill((0,0,255))
 
 class Enemy(Entity):
-    def __init__(self, root, rect=[0,0,32,32]):
-        Entity.__init__(self, root, rect)
-        self.surface.fill((255,0,0))
-        self.speed[1] = 2
+    def __init__(self, root, rect=[160+32,100+32,64,64]):
+        Entity.__init__(self, root, rect[:])
+        self.images = self.root.images["active"]
+        sx, sy = 0.32, 0.2
+        self.speed = [uniform(-sx,sx), uniform(-sy,sy)]
+        self.surface.fill((0,0,255))
+        self.frame = 0
+        self.distance = 1
 
     def update(self):
-        if self.rect[1] > 200:
-            self.root.layers[1].remove(self)
+        self.surface = self.images[self.frame].copy()
+        self.distance = self.distance*1.02
+        d = int(self.distance)
+        self.surface = pygame.transform.scale(self.surface, (d,d))
+        self.frame += 1
+        if self.frame >= len(self.images):
+            self.frame = 0
+        if self.distance > 40 and self in self.root.layers[0]:
+            self.root.layers[0].remove(self)
+            self.root.layers[4].append(self)
+        elif self.distance > 64:
+            self.root.layers[4].remove(self)
+
+        self.rect[1] -= (self.root.player.speed[1]/32)*(self.distance/2)
 
 class Player(Entity):
     def __init__(self, root, rect=[0,0,32,32]):

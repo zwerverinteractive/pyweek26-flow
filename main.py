@@ -47,7 +47,10 @@ class Game():
 
         self.images = {
             "player" : pygame.image.load("data/player.png"),
+            "active" : sheet(pygame.image.load("data/active.png"), 64),
             "item" : sheet(pygame.image.load("data/item.png"), 64),
+            "gem" : sheet(pygame.image.load("data/gem.png"), 64),
+            "itemrainbow" : sheet(pygame.image.load("data/itemrainbow.png"), 64),
         }
         self.xs = 1
         self.stripes = False
@@ -63,6 +66,8 @@ class Game():
 
     def update(self):
         if randint(0,200) == 0:
+            self.layers[0] = [Enemy(self)] + self.layers[0]
+        if randint(0,500) == 0:
             self.layers[0] = [Item(self)] + self.layers[0]
         #    self.layers[1].append(Enemy(self, [randint(32,320-32),-64,32,32]))
         #UPDATE
@@ -81,7 +86,6 @@ class Game():
         if self.xs < 0: self.xs = 0
         if self.xs > 2: self.xs = 2
         """
-
         bg0speed = int(self.gamespeed/4)+1
         self.bg0.scroll(-int(self.xs+1),bg0speed)
         self.bg1.scroll(0,bg0speed)
@@ -130,7 +134,7 @@ class Game():
         self.zwischen.blit(pygame.transform.flip(self.bg0, True, False), (320/2, 0))
         a = abs(sin(self.dt/2)*255)
         print(a)
-        self.zwischen.set_alpha(80)
+        self.zwischen.set_alpha(120)
         #self.zwischen.fill((0,0,0), (0,0,320,64))
         #self.player.yaw += 0.1
         y = self.player.yaw

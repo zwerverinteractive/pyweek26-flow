@@ -3,4 +3,4 @@ pyweek 26
 
 You gonna need pygame, ya dingus!
 Code = GPL3
-Art = all rights reserved
+Art&Music = all rights reserved (for now)

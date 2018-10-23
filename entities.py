@@ -1,5 +1,5 @@
 import pygame
-from random import choice, uniform
+from random import randint, choice, uniform
 from math import hypot
 
 def clamp(n,min,max):
@@ -21,6 +21,38 @@ class Entity():
         self.images = []
         self.speed = [0, 0]
         self.offset = [0,0]
+        self.frame = 1
+
+    def move_towards(self):
+        self.surface = self.images[self.frame].copy()
+        self.distance = self.distance*1.02
+        d = int(self.distance)
+        self.surface = pygame.transform.scale(self.surface, (d,d))
+        self.frame += 1
+        if self.frame >= len(self.images):
+            self.frame = 0
+        if self.distance > 40 and self in self.root.layers[0]:
+            self.root.layers[0].remove(self)
+            self.root.layers[4].append(self)
+        elif self.distance > 64:
+            self.root.layers[4].remove(self)
+        self.rect[1] -= (self.root.player.speed[1]/32)*(self.distance/2)
+
+    def move_from(self):
+        #self.surface = self.images[self.frame].copy()
+        self.distance = self.distance/1.02
+        d = int(self.distance)
+        self.surface = pygame.transform.scale(self.surface, (int(d/16),int(d/16)))
+        self.frame += 1
+        if self.frame >= len(self.images):
+            self.frame = 0
+        if self.distance < 20 and self in self.root.layers[3]:
+            self.root.layers[3].remove(self)
+            self.root.layers[2].append(self)
+        elif self.distance < 10:
+            self.root.layers[2].remove(self)
+
+        #self.rect[1] -= (self.root.player.speed[1]/32)*(self.distance/2)
 
     def finalize(self):
         self.rect[0] += self.speed[0]
@@ -39,26 +71,7 @@ class Item(Entity):
         self.distance = 1
 
     def update(self):
-        self.surface = self.images[self.frame].copy()
-        self.distance = self.distance*1.02
-        d = int(self.distance)
-        self.surface = pygame.transform.scale(self.surface, (d,d))
-        self.frame += 1
-        if self.frame >= 22:
-            self.frame = 0
-        if self.distance > 40 and self in self.root.layers[0]:
-            self.root.layers[0].remove(self)
-            self.root.layers[4].append(self)
-        elif self.distance > 64:
-            self.root.layers[4].remove(self)
-
-        self.rect[1] -= (self.root.player.speed[1]/32)*(self.distance/2)
-
-class Mouthbeams(Entity):
-    def __init__(self, root, rect=[0,0,5,5]):
-        Entity.__init__(self, root, rect)
-        rc = (randint(128,255),randint(128,255),randint(128,255))
-        self.surface.fill(rc)
+        self.move_towards()
 
 class Enemy(Entity):
     def __init__(self, root, rect=[160+32,100+32,64,64]):
@@ -71,19 +84,7 @@ class Enemy(Entity):
         self.distance = 1
 
     def update(self):
-        self.surface = self.images[self.frame].copy()
-        self.distance = self.distance*1.02
-        d = int(self.distance)
-        self.surface = pygame.transform.scale(self.surface, (d,d))
-        self.frame += 1
-        if self.frame >= len(self.images):
-            self.frame = 0
-        if self.distance > 40 and self in self.root.layers[0]:
-            self.root.layers[0].remove(self)
-            self.root.layers[4].append(self)
-        elif self.distance > 64:
-            self.root.layers[4].remove(self)
-        self.rect[1] -= (self.root.player.speed[1]/32)*(self.distance/2)
+        self.move_towards()
 
 class Player(Entity):
     def __init__(self, root, rect=[0,0,32,32]):
@@ -100,24 +101,45 @@ class Player(Entity):
         self.max = 3
         self.yaw = 0
         self.pitch = 0
+        self.t = 0
 
     def update(self):
+        self.t += 1
+        if self.t > 1 + randint(0,1):
+            #fire bullet hooray!
+            self.t = 0
+            dx, dy, dist = speedangle(160,100,self.rect[0],self.rect[1])
+            beam = Mouthbeams(self.root, [self.rect[0],self.rect[1], 5,5])
+            beam.speed = [dx,dy]
+            self.root.layers[2].append(beam)
 
         ix = int((self.rect[0]/320)*3)
         iy = int((self.rect[1]/200)*5)
         self.surface= self.images[iy][ix]
-
         speed = 4
         accel = 0.2
-        px, py = self.rect[0], self.rect[1]
-        mx, my = self.root.mouse_pos
-        dx, dy = mx - px, my - py
+        dx, dy, dist = speedangle(*self.root.mouse_pos, self.rect[0], self.rect[1])
+        self.speed[0] = (dx)*(dist/10)
+        self.speed[1] = (dy)*(dist/10)
+        self.yaw = (200 - (self.rect[1]/4))-75
+        self.pitch = (320 - (self.rect[0]/2)-(320/4))
+
+class Mouthbeams(Entity):
+    def __init__(self, root, rect=[0,0,5,5]):
+        Entity.__init__(self, root, rect)
+        rc = (randint(128,255),randint(128,255),randint(128,255))
+        self.images = self.root.images["item"]
+        self.surface.fill(rc)
+        self.distance = 64
+
+    def update(self):
+        self.move_from()
+
+def speedangle(ax, ay, bx, by):
+        dx, dy = ax - bx, ay - by
         dist = hypot(dx, dy)
         try:
             dx, dy = dx/dist, dy/dist
         except ZeroDivisionError:
             dx, dy = 0, 0
-        self.speed[0] = (dx)*(dist/10)
-        self.speed[1] = (dy)*(dist/10)
-        self.yaw = (200 - (self.rect[1]/4))-75
-        self.pitch = (320 - (self.rect[0]/2)-(320/4))
+        return dx, dy, dist

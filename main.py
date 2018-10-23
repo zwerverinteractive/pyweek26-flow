@@ -102,7 +102,7 @@ class Game():
             x = 160-(w/2)
             self.bg0.fill(row[0], (x,0,w,bg0speed+2))
             self.bg1.fill(row[0], (x,0,w,bg0speed+2))
-        self.bg0.fill((0,0,0), (140,1,20,bg0speed+8))
+        #self.bg0.fill((0,0,0), (140,1,20,bg0speed+8))
 
         if randint(0,500) ==0:
             if self.stripes: self.stripes = False

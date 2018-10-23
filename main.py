@@ -30,7 +30,7 @@ class Game():
         self.layer_bulletsP = []
         self.xs = 0
         self.ys = 0
-        for i in range(6):
+        for i in range(10):
             self.layers.append([])
             self.layer_bulletsP.append([])
         self.setup()
@@ -84,7 +84,7 @@ class Game():
         if randint(0,500) == 0:
             self.layers[0] = [Item(self)] + self.layers[0]
 
-        if randint(0,200) == 0:
+        if randint(0,1500) == 0:
             if self.current_image == None:
                 i = choice(("water", "pizza", "flower", "flowers", "floor", "facebeet"))
                 self.current_image = self.images[i]
@@ -100,7 +100,7 @@ class Game():
         for l, layer in enumerate(self.layers):
             for entity in self.layer_bulletsP[l]:
                 entity.update()
-                entity.finalize()                
+                entity.finalize()
             for entity in self.layers[l]:
                 entity.update()
                 entity.finalize()
@@ -135,7 +135,7 @@ class Game():
             self.bg1.fill(row[0], (x,0,w,bg0speed+2))
 
 
-        if randint(0,500) ==0:
+        if randint(0,1500) ==0:
             if self.stripes: self.stripes = False
             else:
                 self.stripes = True
@@ -148,7 +148,7 @@ class Game():
                 self.bg0.fill(rc, (0,0,160,self.dd))
                 self.bg1.fill(rc, (0,3,160,self.dd))
 
-        if randint(0,500) == 0:
+        if randint(0,1500) == 0:
             rc = (randint(0,255),randint(0,255),randint(0,255))
             self.bg0.fill((0,0,0))
         if randint(0,500) == 0:

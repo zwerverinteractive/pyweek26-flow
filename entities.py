@@ -35,11 +35,11 @@ class Entity():
         self.frame += 1
         if self.frame >= len(self.images):
             self.frame = 0
-        if not int(self.distance/12) == self.layer:
+        if not int(self.distance/12) == self.layer and self.layer <= 5:
             self.root.layers[self.layer].remove(self)
             self.layer = int(self.distance/12)
             self.root.layers[self.layer].append(self)
-        if self.distance > 64 or self.die:
+        if self.distance > 128 or self.die:
             self.root.layers[self.layer].remove(self)
         self.rect[1] -= (self.root.player.speed[1]/32)*(self.distance/2)
 
@@ -71,7 +71,7 @@ class Item(Entity):
         s = choice(("item", "gem", "itemrainbow"))
         self.images = self.root.images[s]
         sx, sy = 0.32, 0.2
-        self.speed = [uniform(-sx,sx), uniform(-sy,sy)]
+        self.speed = [uniform(-0.8,0.4), uniform(-0.5,0.3)]
         self.surface.fill((0,0,255))
         self.frame = 0
         self.distance = 1
@@ -83,8 +83,7 @@ class Enemy(Entity):
     def __init__(self, root, rect=[160+32,100+32,64,64]):
         Entity.__init__(self, root, rect[:])
         self.images = self.root.images["active"]
-        sx, sy = 0.64, 0.2
-        self.speed = [uniform(-sx,sx), uniform(-sy,sy)]
+        self.speed = [uniform(-0.8,0.4), uniform(-0.5,0.3)]
         self.surface.fill((0,0,255))
         self.frame = 0
         self.distance = 1
@@ -133,10 +132,13 @@ class Player(Entity):
         speed = 4
         accel = 0.2
         dx, dy, dist = speedangle(*self.root.mouse_pos, self.rect[0], self.rect[1])
+        mspeed = 8
         self.speed[0] = (dx)*(dist/10)
+        self.speed[0] = clamp(self.speed[0], -mspeed,mspeed)
         self.speed[1] = (dy)*(dist/10)
+        self.speed[1] = clamp(self.speed[1], -(mspeed/2),(mspeed/2))
         self.yaw = (200 - (self.rect[1]/4))-75
-        self.pitch = (320 - (self.rect[0]/2)-(320/4))
+        self.pitch = (320 - (self.rect[0]/2)-(320/2))
 
 class Mouthbeams(Entity):
     def __init__(self, root, rect=[0,0,5,5]):

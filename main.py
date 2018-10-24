@@ -54,31 +54,44 @@ class Game():
             "item" : sheet(pygame.image.load("data/item.png"), (64,64)),
             "gem" : sheet(pygame.image.load("data/gem.png"), (64,64)),
             "itemrainbow" : sheet(pygame.image.load("data/itemrainbow.png"), (64,64)),
-
+            "cracks" : sheet(pygame.image.load("data/cracks.png"), (64,64)),
             #backgrounds
             "water": sheet(pygame.image.load("data/water.png"), (160,1)),
             "pizza": sheet(pygame.image.load("data/pizza.png"), (160,1)),
             "flowers": sheet(pygame.image.load("data/flowers.png"), (160,1)),
             "flower": sheet(pygame.image.load("data/flower.png"), (160,1)),
             "floor": sheet(pygame.image.load("data/floor.png"), (160,1)),
-            "facebeet": sheet(pygame.image.load("data/facebeet.png"), (160,1)),
+            "eye": sheet(pygame.image.load("data/eye.png"), (160,1)),
         }
+        self.explosions = [
+            sheet(pygame.image.load("data/explosions/1.png"), (64,64)),
+            sheet(pygame.image.load("data/explosions/2.png"), (64,64)),
+            sheet(pygame.image.load("data/explosions/3.png"), (64,64)),
+            sheet(pygame.image.load("data/explosions/4.png"), (64,64)),
+            sheet(pygame.image.load("data/explosions/5.png"), (64,64)),
+        ]
+        self.bosses = [
+            sheet(pygame.image.load("data/boss1.png"), (320,200)),
+        ]
+
+        self.boss = Boss(self)
+        self.layers[0].append(self.boss)
         self.xs = 1
         self.stripes = False
         self.bg0 = pygame.Surface((320/2,200))
         self.bg0.set_colorkey((0,0,0))
         self.bg1 = pygame.Surface((320/2,200))
-
         self.current_image = None
-
         self.zwischen = pygame.Surface((320, 200))
         m = self.scale_mouse(pygame.mouse.get_pos())
         self.player = Player(self, [m[0],m[1],32,32])
         self.layers[5].append(self.player)
-
-        self.gamespeed = 4
+        self.gamespeed = 0
+        self.overwrite_colors = [None, None]
 
     def update(self):
+        if self.gamespeed < 64:
+            self.gamespeed += 0.001
         if randint(0,200) == 0:
             self.layers[0] = [Enemy(self)] + self.layers[0]
         if randint(0,500) == 0:
@@ -86,7 +99,7 @@ class Game():
 
         if randint(0,1500) == 0:
             if self.current_image == None:
-                i = choice(("water", "pizza", "flower", "flowers", "floor", "facebeet"))
+                i = choice(("water", "pizza", "flower", "flowers", "floor", "eye"))
                 self.current_image = self.images[i]
                 self.image_y = 0
             else:
@@ -107,7 +120,6 @@ class Game():
         #DRAW
         self.xs = abs(sin(self.dt*3)*3)
         self.ys = abs(sin(self.dt*2)*320)+1
-        self.gamespeed = abs(sin(self.dt)*40)
         """
         self.xs += randint(-1,1)
         if self.xs < 0: self.xs = 0
@@ -115,7 +127,7 @@ class Game():
         """
         bg0speed = int(self.gamespeed/4)+1
         self.bg0.scroll(-int(self.xs+1),bg0speed)
-        self.bg1.scroll(0,bg0speed)
+        self.bg1.scroll(abs(int(sin(self.xs+1))),bg0speed)
         for r, row in enumerate(self.rows):
             for i in range(4):
                 if randint(0,20) == 0:
@@ -134,6 +146,15 @@ class Game():
             self.bg0.fill(row[0], (x,0,w,bg0speed+2))
             self.bg1.fill(row[0], (x,0,w,bg0speed+2))
 
+        if self.current_image == None:
+            for c, color in enumerate(self.overwrite_colors):
+                if randint(0,64) == 0:
+                    if self.overwrite_colors[c] == None:
+                        self.overwrite_colors[c] = (randint(0,255),randint(0,255),randint(0,255))
+                    else:
+                        self.overwrite_colors[c] = None
+        else:
+            self.overwrite_colors = [None, None]
 
         if randint(0,1500) ==0:
             if self.stripes: self.stripes = False
@@ -148,13 +169,6 @@ class Game():
                 self.bg0.fill(rc, (0,0,160,self.dd))
                 self.bg1.fill(rc, (0,3,160,self.dd))
 
-        if randint(0,1500) == 0:
-            rc = (randint(0,255),randint(0,255),randint(0,255))
-            self.bg0.fill((0,0,0))
-        if randint(0,500) == 0:
-            rc = (randint(0,255),randint(0,255),randint(0,255))
-            self.bg1.fill(rc)
-
         if not self.current_image == None:
             for i in range(bg0speed+2):
                 self.bg0.blit(self.current_image[self.image_y], (0,i))
@@ -162,6 +176,12 @@ class Game():
                 self.image_y += 1
                 if self.image_y >= len(self.current_image):
                     self.image_y = 0
+
+        if not self.overwrite_colors[0] == None:
+            self.bg0.fill(self.overwrite_colors[0], (0,0,320,bg0speed+2))
+        if not self.overwrite_colors[1] == None:
+            self.bg1.fill(self.overwrite_colors[1], (0,0,320,bg0speed+2))
+
         self.zwischen.blit(self.bg1, (0,0))
         self.zwischen.blit(pygame.transform.flip(self.bg1, True, False), (320/2, 0))
 

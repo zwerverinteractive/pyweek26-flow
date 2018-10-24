@@ -33,13 +33,16 @@ class Entity():
         self.surface = pygame.transform.scale(self.surface, (d,d))
         self.size = (d,d)
         self.frame += 1
+        kill = False
         if self.frame >= len(self.images):
             self.frame = 0
+            if self.die:
+                kill = True
         if not int(self.distance/12) == self.layer and self.layer <= 5:
             self.root.layers[self.layer].remove(self)
             self.layer = int(self.distance/12)
             self.root.layers[self.layer].append(self)
-        if self.distance > 128 or self.die:
+        if self.distance > 128 or kill:
             self.root.layers[self.layer].remove(self)
         self.rect[1] -= (self.root.player.speed[1]/32)*(self.distance/2)
 
@@ -50,13 +53,17 @@ class Entity():
         self.surface = pygame.transform.scale(self.surface, (int(d/16),int(d/16)))
         self.size = (int(d/16),int(d/16))
         self.frame += 1
+        kill = False
         if self.frame >= len(self.images):
             self.frame = 0
+            if self.die:
+                kill = True
+
         if not int(self.distance/12) == self.layer:
             self.root.layer_bulletsP[self.layer].remove(self)
             self.layer = int(self.distance/12)
             self.root.layer_bulletsP[self.layer].append(self)
-        if self.distance < 10 or self.die:
+        if self.distance < 10 or kill:
             self.root.layer_bulletsP[self.layer].remove(self)
         self.rect[1] -= (self.root.player.speed[1]/32)*(self.distance/2)
 
@@ -65,9 +72,24 @@ class Entity():
         self.rect[1] += self.speed[1]
         self.center = [int(self.rect[0]-(self.rect[2]/2)), int(self.rect[1]-(self.rect[3]/2))]
 
+class Boss(Entity):
+    def __init__(self, root, rect=[160,100,320,200]):
+        Entity.__init__(self, root, rect)
+        self.images = self.root.bosses[0]
+        self.timer = 0
+
+    def update(self):
+        self.timer += 1
+        if self.timer > 5:
+            self.timer = 0
+            self.frame += 1
+            if self.frame >= len(self.images):
+                self.frame = 0
+            self.surface = self.images[self.frame].copy()
+
 class Item(Entity):
     def __init__(self, root, rect=[160+32,100+32,64,64]):
-        Entity.__init__(self, root, rect[:])
+        Entity.__init__(self, root, rect)
         s = choice(("item", "gem", "itemrainbow"))
         self.images = self.root.images[s]
         sx, sy = 0.32, 0.2
@@ -91,12 +113,15 @@ class Enemy(Entity):
     def update(self):
         self.move_towards()
         #HITBYBULLET
-        for b in self.root.layer_bulletsP[self.layer]:
-            s = 3
-            if b.rect[0] > (self.rect[0]-(self.size[0]/s)) and b.rect[0] < self.rect[0]+(self.size[0]/s):
-                if b.rect[1] < self.rect[1]+(self.size[1]/s) and b.rect[1] > self.rect[1]-(self.size[1]/s):
-                    b.die = True
-                    self.die = True
+        if not self.die and self.distance > 10:
+            for b in self.root.layer_bulletsP[self.layer]:
+                s = 3
+                if b.rect[0] > (self.rect[0]-(self.size[0]/s)) and b.rect[0] < self.rect[0]+(self.size[0]/s):
+                    if b.rect[1] < self.rect[1]+(self.size[1]/s) and b.rect[1] > self.rect[1]-(self.size[1]/s):
+                        self.images = self.root.explosions[randint(0,4)]
+                        self.frame = 0
+                        b.die = True
+                        self.die = True
 
 
 class Player(Entity):
@@ -118,7 +143,7 @@ class Player(Entity):
 
     def update(self):
         self.t += 1
-        if self.t > 1 + randint(0,1):
+        if self.t > 5 + randint(0,1):
             #fire bullet hooray!
             self.t = 0
             dx, dy, dist = speedangle(160,100,self.rect[0],self.rect[1])
@@ -152,6 +177,8 @@ class Mouthbeams(Entity):
 
     def update(self):
         self.move_from()
+        rc = (randint(128,255),randint(128,255),randint(128,255))
+        self.surface.fill(rc)
 
 def speedangle(ax, ay, bx, by):
         dx, dy = ax - bx, ay - by

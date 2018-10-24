@@ -73,9 +73,8 @@ class Game():
         self.bosses = [
             sheet(pygame.image.load("data/boss1.png"), (320,200)),
         ]
-
-        self.boss = Boss(self)
-        self.layers[0].append(self.boss)
+        self.timer = 0
+        self.boss = None
         self.xs = 1
         self.stripes = False
         self.bg0 = pygame.Surface((320/2,200))
@@ -90,20 +89,29 @@ class Game():
         self.overwrite_colors = [None, None]
 
     def update(self):
-        if self.gamespeed < 64:
-            self.gamespeed += 0.001
-        if randint(0,200) == 0:
-            self.layers[0] = [Enemy(self)] + self.layers[0]
-        if randint(0,500) == 0:
-            self.layers[0] = [Item(self)] + self.layers[0]
-
-        if randint(0,1500) == 0:
-            if self.current_image == None:
-                i = choice(("water", "pizza", "flower", "flowers", "floor", "eye"))
-                self.current_image = self.images[i]
-                self.image_y = 0
-            else:
+        self.timer += 0.001
+        if self.timer >= 3:
+            if self.gamespeed < 100:
+                self.boss = Boss(self)
+                self.layers[0].append(self.boss)
+                self.gamespeed = 200
                 self.current_image = None
+                self.stripes = False
+        else:
+            if self.gamespeed < 64:
+                self.gamespeed += 0.001
+            if randint(0,200) == 0:
+                self.layers[0] = [Enemy(self)] + self.layers[0]
+            if randint(0,500) == 0:
+                self.layers[0] = [Item(self)] + self.layers[0]
+
+            if randint(0,1500) == 0:
+                if self.current_image == None:
+                    i = choice(("water", "pizza", "flower", "flowers", "floor", "eye"))
+                    self.current_image = self.images[i]
+                    self.image_y = 0
+                else:
+                    self.current_image = None
 
 
         #    self.layers[1].append(Enemy(self, [randint(32,320-32),-64,32,32]))

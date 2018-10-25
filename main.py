@@ -1,5 +1,5 @@
 import pygame
-from random import choice, randint
+from random import choice, randint, seed
 from math import sin
 from entities import *
 
@@ -33,6 +33,8 @@ class Game():
         for i in range(10):
             self.layers.append([])
             self.layer_bulletsP.append([])
+        self.level = 0
+        self.started = False
         self.setup()
         for i in range(200):
             self.update()
@@ -50,18 +52,18 @@ class Game():
 
         self.images = {
             "player" : pygame.image.load("data/player.png"),
-            "active" : sheet(pygame.image.load("data/active.png"), (64,64)),
-            "item" : sheet(pygame.image.load("data/item.png"), (64,64)),
-            "gem" : sheet(pygame.image.load("data/gem.png"), (64,64)),
-            "itemrainbow" : sheet(pygame.image.load("data/itemrainbow.png"), (64,64)),
             "cracks" : sheet(pygame.image.load("data/cracks.png"), (64,64)),
+            "active" : sheet(pygame.image.load("data/floaters/active.png"), (64,64)),
+            "item" : sheet(pygame.image.load("data/floaters/item.png"), (64,64)),
+            "gem" : sheet(pygame.image.load("data/floaters/gem.png"), (64,64)),
+            "itemrainbow" : sheet(pygame.image.load("data/floaters/itemrainbow.png"), (64,64)),
             #backgrounds
-            "water": sheet(pygame.image.load("data/water.png"), (160,1)),
-            "pizza": sheet(pygame.image.load("data/pizza.png"), (160,1)),
-            "flowers": sheet(pygame.image.load("data/flowers.png"), (160,1)),
-            "flower": sheet(pygame.image.load("data/flower.png"), (160,1)),
-            "floor": sheet(pygame.image.load("data/floor.png"), (160,1)),
-            "eye": sheet(pygame.image.load("data/eye.png"), (160,1)),
+            "water": sheet(pygame.image.load("data/bgs/water.png"), (160,1)),
+            "pizza": sheet(pygame.image.load("data/bgs/pizza.png"), (160,1)),
+            "flowers": sheet(pygame.image.load("data/bgs/flowers.png"), (160,1)),
+            "flower": sheet(pygame.image.load("data/bgs/flower.png"), (160,1)),
+            "floor": sheet(pygame.image.load("data/bgs/floor.png"), (160,1)),
+            "eye": sheet(pygame.image.load("data/bgs/eye.png"), (160,1)),
         }
         self.explosions = [
             sheet(pygame.image.load("data/explosions/1.png"), (64,64)),
@@ -71,7 +73,11 @@ class Game():
             sheet(pygame.image.load("data/explosions/5.png"), (64,64)),
         ]
         self.bosses = [
-            sheet(pygame.image.load("data/boss1.png"), (320,200)),
+            [
+                sheet(pygame.image.load("data/boss/boss1.png"), (320,200)),
+                sheet(pygame.image.load("data/boss/boss1-HIT.png"), (320,200)),
+                sheet(pygame.image.load("data/boss/boss1-WHITE.png"), (320,200)),
+            ],
         ]
         self.timer = 0
         self.boss = None
@@ -83,48 +89,59 @@ class Game():
         self.current_image = None
         self.zwischen = pygame.Surface((320, 200))
         m = self.scale_mouse(pygame.mouse.get_pos())
-        self.player = Player(self, [m[0],m[1],32,32])
-        self.layers[5].append(self.player)
         self.gamespeed = 0
         self.overwrite_colors = [None, None]
+        self.healthscreen = pygame.Surface((320, 200))
+        seed(self.level)
+
+    def new_game():
+        self.player = Player(self, [m[0],m[1],32,32])
+        self.layers[5].append(self.player)
+        self.started = True
 
     def update(self):
-        self.timer += 0.001
-        if self.timer >= 3:
-            if self.gamespeed < 100:
-                self.boss = Boss(self)
-                self.layers[0].append(self.boss)
-                self.gamespeed = 200
-                self.current_image = None
-                self.stripes = False
-        else:
-            if self.gamespeed < 64:
-                self.gamespeed += 0.001
-            if randint(0,200) == 0:
-                self.layers[0] = [Enemy(self)] + self.layers[0]
-            if randint(0,500) == 0:
-                self.layers[0] = [Item(self)] + self.layers[0]
-
-            if randint(0,1500) == 0:
-                if self.current_image == None:
-                    i = choice(("water", "pizza", "flower", "flowers", "floor", "eye"))
-                    self.current_image = self.images[i]
-                    self.image_y = 0
-                else:
+        if self.started:
+            self.dt += 0.001
+            #BOSS
+            self.timer += 0.001
+            if self.timer >= 2:
+                if self.gamespeed < 100:
+                    self.boss = Boss(self)
+                    for i in range(2):
+                        self.layers[i] = []
+                    self.layers[2].append(self.boss)
+                    self.gamespeed = 200
                     self.current_image = None
+                    self.stripes = False
+            else:
+                #SPEED UP
+                if self.gamespeed < 64:
+                    self.gamespeed += 0.001
+                if randint(0,40) == 0:
+                    self.layers[0] = [Enemy(self)] + self.layers[0]
+                if randint(0,500) == 0:
+                    self.layers[0] = [Item(self)] + self.layers[0]
 
+                if randint(0,1500) == 0:
+                    if self.current_image == None:
+                        i = choice(("water", "pizza", "flower", "flowers", "floor", "eye"))
+                        self.current_image = self.images[i]
+                        self.image_y = 0
+                    else:
+                        self.current_image = None
+        else:
+            self.dt += 1
 
-        #    self.layers[1].append(Enemy(self, [randint(32,320-32),-64,32,32]))
-        #UPDATE
-        self.input()
-        self.dt += 0.001
-        for l, layer in enumerate(self.layers):
-            for entity in self.layer_bulletsP[l]:
-                entity.update()
-                entity.finalize()
-            for entity in self.layers[l]:
-                entity.update()
-                entity.finalize()
+            #    self.layers[1].append(Enemy(self, [randint(32,320-32),-64,32,32]))
+            #UPDATE
+            self.input()
+            for l, layer in enumerate(self.layers):
+                for entity in self.layer_bulletsP[l]:
+                    entity.update()
+                    entity.finalize()
+                for entity in self.layers[l]:
+                    entity.update()
+                    entity.finalize()
         #DRAW
         self.xs = abs(sin(self.dt*3)*3)
         self.ys = abs(sin(self.dt*2)*320)+1
@@ -196,10 +213,13 @@ class Game():
         self.zwischen.blit(self.bg0, (0,0))
         self.zwischen.blit(pygame.transform.flip(self.bg0, True, False), (320/2, 0))
         a = abs(sin(self.dt/2)*255)
-        self.zwischen.set_alpha(120)
+        self.zwischen.set_alpha(2)
         #self.zwischen.fill((0,0,0), (0,0,320,64))
         #self.player.yaw += 0.1
-        y = self.player.yaw
+        try:
+            y = self.player.yaw
+        except:
+            y = 100
         self.screen.blit(pygame.transform.scale(self.zwischen, (320,int(200-y))), (0,y))
         f = pygame.transform.flip(self.zwischen, False, True)
         self.screen.blit(pygame.transform.scale(f, (320,int(y)+1)), (0, 0))

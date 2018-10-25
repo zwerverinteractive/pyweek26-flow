@@ -26,6 +26,14 @@ class Game():
         self.screen = pygame.Surface(self.screen_res)
         self.screen.set_alpha(50)
         self.buttons = [None, None, None, None, None]
+        warning = pygame.image.load("data/seisurewarning.png")
+        self.screen.blit(warning, (0,0))
+        pygame.transform.scale(self.screen, self.window_res, self.window)
+        pygame.display.flip()
+        while True:
+            self.input()
+            if self.buttons[1] == True:
+                break
         self.layers = []
         self.layer_bulletsP = []
         self.xs = 0
@@ -33,7 +41,7 @@ class Game():
         for i in range(10):
             self.layers.append([])
             self.layer_bulletsP.append([])
-        self.level = 0
+        self.level = 3
         self.started = False
         self.setup()
         for i in range(200):
@@ -52,6 +60,7 @@ class Game():
 
         self.images = {
             "title" : sheet(pygame.image.load("data/titlescreen.png"), (320,200)),
+            "bosswarning" : sheet(pygame.image.load("data/bosswarning.png"), (117,54)),
             "player" : pygame.image.load("data/player.png"),
             "cracks" : sheet(pygame.image.load("data/cracks.png"), (64,64)),
             "active" : sheet(pygame.image.load("data/floaters/active.png"), (64,64)),
@@ -103,7 +112,7 @@ class Game():
         self.level = 1
         seed(self.level)
         self.started = True
-        self.blur = 1
+        self.blur = 50
 
     def next_level(self):
         self.rows = [
@@ -120,7 +129,8 @@ class Game():
         self.bg1.fill(rc)
         self.gamespeed = 0
         self.timer = 0
-        self.level += 1
+        self.level += 0.5
+        self.blur = 50
         seed(self.level)
 
 
@@ -136,24 +146,31 @@ class Game():
                 if self.gamespeed > 198 and self.gamespeed < 200:
                     self.boss = Boss(self)
                     self.layers[2].append(self.boss)
-                    self.gamespeed = 200
+                    self.gamespeed = 201
                     self.current_image = None
                     self.stripes = False
-                else:
+                    self.blur = 0
+                elif self.gamespeed <= 201:
+                    self.blur = 80
+                    self.screen.blit(self.images["bosswarning"][randint(0,1)], (160-58,0))
                     self.gamespeed += 1
             else:
                 #SPEED UP
                 if self.gamespeed < 64:
                     self.gamespeed += 0.01
-                if randint(0,200-(self.level*10)) == 0:
+                if randint(0,20 + (20-int(self.level))) == 0:
                     self.layers[0] = [Enemy(self)] + self.layers[0]
                 if randint(0,500) == 0:
                     self.layers[0] = [Item(self)] + self.layers[0]
 
-                if randint(0,1500) == 0:
-                    if self.current_image == None:
-                        i = choice(("water", "pizza", "flower", "flowers", "floor", "eye"))
-                        self.current_image = self.images[i]
+                if self.current_image == None:
+                    if int((self.level*2)%2) == 0:
+                        i = ("water", "pizza", "flower", "flowers", "floor", "eye")
+                        img = i[int(len(i)%(self.level))]
+                        img = i[int(self.level/2)%len(i)]
+
+                        print(img)
+                        self.current_image = self.images[img]
                         self.image_y = 0
                     else:
                         self.current_image = None

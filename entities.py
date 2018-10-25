@@ -127,7 +127,7 @@ class Item(Entity):
         xmin = self.dspeed/4
         ymax = self.dspeed/7
         ymin = self.dspeed/5
-        self.speed = [uniform(-xmin,xmax), uniform(-ymin,ymax)]        
+        self.speed = [uniform(-xmin,xmax), uniform(-ymin,ymax)]
 
     def update(self):
         self.move_towards()
@@ -136,12 +136,13 @@ class Enemy(Entity):
     def __init__(self, root, rect=[160+32,100+32,64,64]):
         Entity.__init__(self, root, rect[:])
         self.images = self.root.images["active"]
-        self.dspeed = (1.009+(self.root.level/1000))
+        self.dspeed = (1.009+(self.root.level/200))
 
-        xmax = self.dspeed/8
-        xmin = self.dspeed/4
-        ymax = self.dspeed/7
-        ymin = self.dspeed/5
+        scale = self.root.level
+        xmax = ((self.dspeed*scale)/8)
+        xmin = ((self.dspeed*scale)/4)
+        ymax = ((self.dspeed*scale)/7)
+        ymin = ((self.dspeed*scale)/5)
         self.speed = [uniform(-xmin,xmax), uniform(-ymin,ymax)]
 
         self.surface.fill((0,0,255))
@@ -177,12 +178,13 @@ class Player(Entity):
         self.surface = self.images[2][1]
         self.max = 3
         self.yaw = 0
+        self.bulletspeed = 10
         self.pitch = 0
         self.t = 0
 
     def update(self):
         self.t += 1
-        if self.t > 2 + randint(0,3):
+        if self.t > self.bulletspeed + randint(0,3):
             #fire bullet hooray!
             self.t = 0
             dx, dy, dist = speedangle(160,100,self.rect[0],self.rect[1])
@@ -196,7 +198,7 @@ class Player(Entity):
         speed = 4
         accel = 0.2
         dx, dy, dist = speedangle(*self.root.mouse_pos, self.rect[0], self.rect[1])
-        mspeed = 8
+        mspeed = 16
         self.speed[0] = (dx)*(dist/10)
         self.speed[0] = clamp(self.speed[0], -mspeed/1.2,mspeed/1.2)
         self.speed[1] = (dy)*(dist/10)

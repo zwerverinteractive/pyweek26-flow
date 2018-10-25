@@ -14,6 +14,24 @@ def sheet(image, size):
             l.append(s)
     return l
 
+def sheetsheet(image, size):
+    l = [[]]
+    t = 0
+    a = 0
+    img_size = image.get_size()
+    for y in range(int(img_size[1]/size[1])):
+        for x in range(int(img_size[0]/size[0])):
+            s = pygame.Surface(size)
+            s.blit(image, (-(x*size[0]), -(y*size[1])))
+            s.set_colorkey((0,0,0))
+            l[a].append(s)
+            t += 1
+            if t > 1:
+                t = 0
+                a += 1
+                l.append([])
+    return l
+
 class Game():
     def __init__(self):
         pygame.init()
@@ -32,7 +50,7 @@ class Game():
         pygame.display.flip()
         while True:
             self.input()
-            if self.buttons[1] == True:
+            if self.buttons[1] == False:
                 break
         self.layers = []
         self.layer_bulletsP = []
@@ -41,7 +59,7 @@ class Game():
         for i in range(10):
             self.layers.append([])
             self.layer_bulletsP.append([])
-        self.level = 3
+        self.level = 1
         self.started = False
         self.setup()
         for i in range(200):
@@ -67,6 +85,7 @@ class Game():
             "item" : sheet(pygame.image.load("data/floaters/item.png"), (64,64)),
             "gem" : sheet(pygame.image.load("data/floaters/gem.png"), (64,64)),
             "itemrainbow" : sheet(pygame.image.load("data/floaters/itemrainbow.png"), (64,64)),
+            "willie" : sheetsheet(pygame.image.load("data/floaters/willie.png"), (64,64)),
             #backgrounds
             "water": sheet(pygame.image.load("data/bgs/water.png"), (160,1)),
             "pizza": sheet(pygame.image.load("data/bgs/pizza.png"), (160,1)),
@@ -109,7 +128,7 @@ class Game():
         m = self.scale_mouse(pygame.mouse.get_pos())
         self.player = Player(self, [m[0],m[1],32,32])
         self.layers[5].append(self.player)
-        self.level = 1
+        self.level = 0.5
         seed(self.level)
         self.started = True
         self.blur = 50
@@ -159,7 +178,7 @@ class Game():
                 if self.gamespeed < 64:
                     self.gamespeed += 0.01
                 if randint(0,20 + (20-int(self.level))) == 0:
-                    self.layers[0] = [Enemy(self)] + self.layers[0]
+                    self.layers[0] = [DualSheetEnemy(self)] + self.layers[0]
                 if randint(0,500) == 0:
                     self.layers[0] = [Item(self)] + self.layers[0]
 

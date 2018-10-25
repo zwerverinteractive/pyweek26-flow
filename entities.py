@@ -163,6 +163,12 @@ class Enemy(Entity):
                         b.die = True
                         self.die = True
 
+class DualSheetEnemy(Enemy):
+    def __init__(self, root):
+        Enemy.__init__(self, root)
+        self.sprite = randint((self.root.level*4),(self.root.level*4)+2)
+        self.images = self.root.images["willie"][self.sprite]
+
 
 class Player(Entity):
     def __init__(self, root, rect=[0,0,32,32]):
@@ -178,7 +184,7 @@ class Player(Entity):
         self.surface = self.images[2][1]
         self.max = 3
         self.yaw = 0
-        self.bulletspeed = 10
+        self.bulletspeed = 4
         self.pitch = 0
         self.t = 0
 

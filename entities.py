@@ -1,5 +1,5 @@
 import pygame
-from random import randint, choice, uniform
+from random import randint, choice, uniform, seed
 from math import hypot
 
 def clamp(n,min,max):
@@ -88,13 +88,10 @@ class Boss(Entity):
             self.frame += 1
             if self.die:
                 if self.frame >= len(self.images):
+                    self.root.next_level()
                     self.root.boss = None
                     self.root.layers[2].remove(self)
-                    self.root.gamespeed = 1
-                    self.root.timer = 0
                     self.frame = 0
-                    self.root.level += 1
-                    seed(self.root.level)
             else:
                 if self.frame >= len(self.images[0]):
                     self.frame = 0
@@ -105,9 +102,8 @@ class Boss(Entity):
             for bullet in self.root.layer_bulletsP[3]:
                 try:
                     pixel_hit = self.images[1][self.frame].get_at((int(bullet.rect[0]), int(bullet.rect[1])))
-                except IndexError:
+                except:
                     pixel_hit = (0,0,0,255)
-                print(pixel_hit)
                 if pixel_hit == (0,0,255,255):
                     self.root.layer_bulletsP[3].remove(bullet)
                     self.surface = self.images[2][self.frame]
@@ -127,6 +123,11 @@ class Item(Entity):
         self.frame = 0
         self.distance = 1
         self.dspeed = (1.01)
+        xmax = self.dspeed/8
+        xmin = self.dspeed/4
+        ymax = self.dspeed/7
+        ymin = self.dspeed/5
+        self.speed = [uniform(-xmin,xmax), uniform(-ymin,ymax)]        
 
     def update(self):
         self.move_towards()
@@ -152,14 +153,10 @@ class Enemy(Entity):
         self.move_towards()
         #HITBYBULLET
         if not self.die and self.distance > 10:
-            bullets = []
-            for i in range(4):
-                bullets = bullets + self.root.layer_bulletsP[self.layer-2+i]
-
-            for b in self.root.layer_bulletsP[self.layer] + self.root.layer_bulletsP[self.layer+1]:
-                s = 3
-                if b.rect[0] > (self.rect[0]-(self.size[0]/s)) and b.rect[0] < self.rect[0]+(self.size[0]/s):
-                    if b.rect[1] < self.rect[1]+(self.size[1]/s) and b.rect[1] > self.rect[1]-(self.size[1]/s):
+            for b in self.root.layer_bulletsP[self.layer]:
+                #print(self.size, self.rect)
+                if b.rect[0] > (self.center[0]) and b.rect[0] < self.center[0]+self.size[0]:
+                    if b.rect[1] > (self.center[1]) and b.rect[1] < self.center[1]+self.size[1]:
                         self.images = self.root.explosions[randint(0,4)]
                         self.frame = 0
                         b.die = True
@@ -201,7 +198,7 @@ class Player(Entity):
         dx, dy, dist = speedangle(*self.root.mouse_pos, self.rect[0], self.rect[1])
         mspeed = 8
         self.speed[0] = (dx)*(dist/10)
-        self.speed[0] = clamp(self.speed[0], -mspeed,mspeed)
+        self.speed[0] = clamp(self.speed[0], -mspeed/1.2,mspeed/1.2)
         self.speed[1] = (dy)*(dist/10)
         self.speed[1] = clamp(self.speed[1], -(mspeed/2),(mspeed/2))
         self.yaw = (200 - (self.rect[1]/4))-75

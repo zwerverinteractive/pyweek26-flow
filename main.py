@@ -51,6 +51,7 @@ class Game():
         ]
 
         self.images = {
+            "title" : sheet(pygame.image.load("data/titlescreen.png"), (320,200)),
             "player" : pygame.image.load("data/player.png"),
             "cracks" : sheet(pygame.image.load("data/cracks.png"), (64,64)),
             "active" : sheet(pygame.image.load("data/floaters/active.png"), (64,64)),
@@ -90,34 +91,61 @@ class Game():
         self.zwischen = pygame.Surface((320, 200))
         m = self.scale_mouse(pygame.mouse.get_pos())
         self.gamespeed = 0
+        self.blur = 0
         self.overwrite_colors = [None, None]
         self.healthscreen = pygame.Surface((320, 200))
         seed(self.level)
 
-    def new_game():
+    def new_game(self):
+        m = self.scale_mouse(pygame.mouse.get_pos())
         self.player = Player(self, [m[0],m[1],32,32])
         self.layers[5].append(self.player)
+        self.level = 1
+        seed(self.level)
         self.started = True
+        self.blur = 1
+
+    def next_level(self):
+        self.rows = [
+            [[0,128,0], 320, [0,0,0,0]],
+            [[0,255,0], 200, [0,0,0,0]],
+            [[0,0,255], 160, [0,0,0,0]],
+            [[0,0,128], 100, [0,0,0,0]],
+            [[0,255,255],70, [0,0,0,0]],
+            [[0,128,128],30, [0,0,0,0]],
+        ]
+        rc = (randint(0,255),randint(0,255),randint(0,255))
+        self.zwischen.fill(rc)
+        self.bg0.fill((0,0,0))
+        self.bg1.fill(rc)
+        self.gamespeed = 0
+        self.timer = 0
+        self.level += 1
+        seed(self.level)
+
 
     def update(self):
+        self.input()
         if self.started:
             self.dt += 0.001
             #BOSS
             self.timer += 0.001
-            if self.timer >= 2:
-                if self.gamespeed < 100:
+            if self.timer >= 1:
+                for i in range(2):
+                    self.layers[i] = []
+                if self.gamespeed > 198 and self.gamespeed < 200:
                     self.boss = Boss(self)
-                    for i in range(2):
-                        self.layers[i] = []
                     self.layers[2].append(self.boss)
                     self.gamespeed = 200
                     self.current_image = None
                     self.stripes = False
+                else:
+                    self.gamespeed += 1
             else:
                 #SPEED UP
                 if self.gamespeed < 64:
-                    self.gamespeed += 0.001
-                if randint(0,40) == 0:
+                    self.gamespeed += 0.01
+                if randint(0,200-(self.level*10)) == 0:
                     self.layers[0] = [Enemy(self)] + self.layers[0]
                 if randint(0,500) == 0:
                     self.layers[0] = [Item(self)] + self.layers[0]
@@ -129,12 +157,9 @@ class Game():
                         self.image_y = 0
                     else:
                         self.current_image = None
-        else:
-            self.dt += 1
-
             #    self.layers[1].append(Enemy(self, [randint(32,320-32),-64,32,32]))
             #UPDATE
-            self.input()
+
             for l, layer in enumerate(self.layers):
                 for entity in self.layer_bulletsP[l]:
                     entity.update()
@@ -142,7 +167,13 @@ class Game():
                 for entity in self.layers[l]:
                     entity.update()
                     entity.finalize()
+
+        else:
+            self.dt += 1
+            if self.buttons[1]:
+                self.new_game()
         #DRAW
+
         self.xs = abs(sin(self.dt*3)*3)
         self.ys = abs(sin(self.dt*2)*320)+1
         """
@@ -213,7 +244,7 @@ class Game():
         self.zwischen.blit(self.bg0, (0,0))
         self.zwischen.blit(pygame.transform.flip(self.bg0, True, False), (320/2, 0))
         a = abs(sin(self.dt/2)*255)
-        self.zwischen.set_alpha(2)
+        self.zwischen.set_alpha(100-self.blur)
         #self.zwischen.fill((0,0,0), (0,0,320,64))
         #self.player.yaw += 0.1
         try:
@@ -223,12 +254,14 @@ class Game():
         self.screen.blit(pygame.transform.scale(self.zwischen, (320,int(200-y))), (0,y))
         f = pygame.transform.flip(self.zwischen, False, True)
         self.screen.blit(pygame.transform.scale(f, (320,int(y)+1)), (0, 0))
-
         for l, layer in enumerate(self.layers):
             for entity in self.layer_bulletsP[l]:
                 self.screen.blit(entity.surface, entity.center)
             for entity in self.layers[l]:
                 self.screen.blit(entity.surface, entity.center)
+        if self.started == False:
+            self.screen.blit(self.images["title"][self.dt%2], (0,0))
+
 
     def start(self):
         self.running = True
@@ -250,7 +283,7 @@ class Game():
         #True is down, False is up, None is stateless/inactive
         #Button is only up for a single loop
         for b, button in enumerate(self.buttons):
-            if button == False: self.button = None
+            if button == False: self.buttons[b] = None
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 self.running = False
@@ -259,10 +292,10 @@ class Game():
                     self.running = False
             elif e.type == pygame.MOUSEBUTTONDOWN:
                 for i in range(5):
-                    if e.button == i: self.buttons[i] == True
+                    if e.button == i: self.buttons[i] = True
             elif e.type == pygame.MOUSEBUTTONUP:
                 for i in range(5):
-                    if e.button == i: self.buttons[i] == False
+                    if e.button == i: self.buttons[i] = False
             elif e.type == pygame.VIDEORESIZE:
                 self.window_res = e.w, e.h
                 self.window = pygame.display.set_mode(self.window_res, pygame.RESIZABLE)

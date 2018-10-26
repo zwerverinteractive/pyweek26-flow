@@ -101,13 +101,13 @@ class Game():
             sheet(pygame.image.load("data/explosions/4.png"), (64,64)),
             sheet(pygame.image.load("data/explosions/5.png"), (64,64)),
         ]
-        self.bosses = [
-            [
-                sheet(pygame.image.load("data/boss/boss1.png"), (320,200)),
-                sheet(pygame.image.load("data/boss/boss1-HIT.png"), (320,200)),
-                sheet(pygame.image.load("data/boss/boss1-WHITE.png"), (320,200)),
-            ],
-        ]
+        self.bosses = []
+        for i in range(7):
+            self.bosses.append([
+                sheet(pygame.image.load("data/boss/boss"+str(i+1)+".png"), (320,200)),
+                sheet(pygame.image.load("data/boss/boss"+str(i+1)+"-HIT.png"), (320,200)),
+                sheet(pygame.image.load("data/boss/boss"+str(i+1)+"-WHITE.png"), (320,200)),
+            ])
         self.timer = 0
         self.boss = None
         self.xs = 1

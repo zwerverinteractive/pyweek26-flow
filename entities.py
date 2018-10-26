@@ -40,13 +40,16 @@ class Entity():
                 self.frame = 0
                 if self.die:
                     kill = True
-        print(self.frame, self)
-        self.surface = self.images[self.frame].copy()
+        try:
+            self.surface = self.images[self.frame]
+        except:
+            self.frame = 0
+            self.surface = self.images[self.frame]
+
         self.distance = self.distance*self.dspeed
         d = int(self.distance)
         self.surface = pygame.transform.scale(self.surface, (d,d))
         self.size = (d,d)
-
 
         if not int(self.distance/12) == self.layer and self.layer <= 5:
             self.root.layers[self.layer].remove(self)
@@ -85,13 +88,18 @@ class Entity():
 class Boss(Entity):
     def __init__(self, root, rect=[160,100,320,200]):
         Entity.__init__(self, root, rect)
-        self.images = self.root.bosses[0]
+        b = int(self.root.level*2)-1
+        print(self.root.level, b)
+        s = [5, 10, 5, 5, 5, 5, 5, 5 ,5]
+        hp = [50, 50, 50, 50, 50, 50, 50]
+        self.framespeed = s[b]
+        self.images = self.root.bosses[b]
         self.timer = 0
-        self.hp = 50
+        self.hp = hp[b]
 
     def update(self):
         self.timer += 1
-        if self.timer > 5:
+        if self.timer > self.framespeed:
             self.timer = 0
             self.frame += 1
             if self.die:
@@ -104,8 +112,11 @@ class Boss(Entity):
                 if self.frame >= len(self.images[0]):
                     self.frame = 0
         if self.die:
-            print(self.frame)
-            self.surface = pygame.transform.scale(self.images[self.frame], (320,200))
+            try:
+                self.surface = pygame.transform.scale(self.images[self.frame], (320,200))
+            except:
+                self.frame = 0
+                self.surface = pygame.transform.scale(self.images[self.frame], (320,200))
         else:
             self.surface = self.images[0][self.frame]
             for bullet in self.root.layer_bulletsP[3]:

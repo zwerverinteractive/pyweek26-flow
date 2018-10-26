@@ -80,7 +80,7 @@ class Game():
             "title" : sheet(pygame.image.load("data/titlescreen.png"), (320,200)),
             "bosswarning" : sheet(pygame.image.load("data/bosswarning.png"), (117,54)),
             "player" : pygame.image.load("data/player.png"),
-            "cracks" : sheet(pygame.image.load("data/cracks.png"), (64,64)),
+            "cracks" : sheet(pygame.image.load("data/cracks.png"), (128,128)),
             "active" : sheet(pygame.image.load("data/floaters/active.png"), (64,64)),
             "item" : sheet(pygame.image.load("data/floaters/item.png"), (64,64)),
             "gem" : sheet(pygame.image.load("data/floaters/gem.png"), (64,64)),
@@ -121,7 +121,7 @@ class Game():
         self.gamespeed = 0
         self.blur = 0
         self.overwrite_colors = [None, None]
-        self.healthscreen = pygame.Surface((320, 200))
+        self.cracks = []
         seed(self.level)
 
     def new_game(self):
@@ -152,6 +152,10 @@ class Game():
         self.blur = 50
         seed(self.level)
 
+    def hit(self, rect):
+        self.blur += 5
+        self.cracks.append([randint(0,3), rect, 255])
+        self.screen.fill((255,0,0))
 
     def update(self):
         self.input()
@@ -295,6 +299,12 @@ class Game():
                 self.screen.blit(entity.surface, entity.center)
             for entity in self.layers[l]:
                 self.screen.blit(entity.surface, entity.center)
+        for c, crack in enumerate(self.cracks):
+            self.images["cracks"][crack[0]].set_alpha(crack[2])
+            self.screen.blit(self.images["cracks"][crack[0]], (crack[1][0]-64, crack[1][1]-64))
+            self.cracks[c][2] -= 1
+            if self.cracks[c][2] == 0:
+                self.cracks.remove(crack)
         if self.started == False:
             self.screen.blit(self.images["title"][self.dt%2], (0,0))
 

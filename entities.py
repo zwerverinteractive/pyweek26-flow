@@ -24,22 +24,30 @@ class Entity():
         self.dspeed = (1.005+(self.root.level/10))
         self.size = [0,0]
         self.frame = 1
+        self.t = 0
+        self.framespeed = 1
         self.layer = 0
         self.bullet = False
         self.die = False
 
     def move_towards(self):
+        kill = False
+        self.t += 1
+        if self.t > self.framespeed:
+            self.t = 0
+            self.frame += 1
+            if self.frame >= len(self.images):
+                self.frame = 0
+                if self.die:
+                    kill = True
+        print(self.frame, self)
         self.surface = self.images[self.frame].copy()
         self.distance = self.distance*self.dspeed
         d = int(self.distance)
         self.surface = pygame.transform.scale(self.surface, (d,d))
         self.size = (d,d)
-        self.frame += 1
-        kill = False
-        if self.frame >= len(self.images):
-            self.frame = 0
-            if self.die:
-                kill = True
+
+
         if not int(self.distance/12) == self.layer and self.layer <= 5:
             self.root.layers[self.layer].remove(self)
             self.layer = int(self.distance/12)
@@ -96,6 +104,7 @@ class Boss(Entity):
                 if self.frame >= len(self.images[0]):
                     self.frame = 0
         if self.die:
+            print(self.frame)
             self.surface = pygame.transform.scale(self.images[self.frame], (320,200))
         else:
             self.surface = self.images[0][self.frame]
@@ -162,12 +171,18 @@ class Enemy(Entity):
                         self.frame = 0
                         b.die = True
                         self.die = True
+                        self.framespeed = 1
+            if self.layer > 5:
+                self.root.hit(self.rect)
+                self.root.layers[self.layer].remove(self)
+
 
 class DualSheetEnemy(Enemy):
     def __init__(self, root):
         Enemy.__init__(self, root)
         self.sprite = randint((self.root.level*4),(self.root.level*4)+2)
         self.images = self.root.images["willie"][self.sprite]
+        self.framespeed = 20
 
 
 class Player(Entity):

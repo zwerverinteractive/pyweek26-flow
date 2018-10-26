@@ -90,14 +90,20 @@ class Boss(Entity):
         Entity.__init__(self, root, rect)
         b = int(self.root.level*2)-1
         print(self.root.level, b)
-        s = [5, 10, 5, 5, 5, 5, 5, 5 ,5]
-        hp = [50, 50, 50, 50, 50, 50, 50]
+        self.endtimers = [
+            500, 500, 500, 500, 500,
+            500, 500, 500, 3000, 2000,
+        ]
+        self.endtimer = 0
+        s = [5, 10, 5, 2, 5, 5, 5, 5 ,5,5,10,15]
+        hp = [50, 50, 50, 50, 50, 50, 50,50,50,50]
         self.framespeed = s[b]
         self.images = self.root.bosses[b]
         self.timer = 0
         self.hp = hp[b]
 
     def update(self):
+
         self.timer += 1
         if self.timer > self.framespeed:
             self.timer = 0
@@ -112,12 +118,20 @@ class Boss(Entity):
                 if self.frame >= len(self.images[0]):
                     self.frame = 0
         if self.die:
+
             try:
                 self.surface = pygame.transform.scale(self.images[self.frame], (320,200))
             except:
                 self.frame = 0
                 self.surface = pygame.transform.scale(self.images[self.frame], (320,200))
         else:
+            self.endtimer += 1
+            rc = (randint(0,255),randint(0,255),randint(0,255))
+
+            w = (320 - (320/1000) * self.endtimer)
+            if w <= 1:
+                self.root.player.dying()
+            self.root.screen.fill(rc, (0,0,w,20))
             self.surface = self.images[0][self.frame]
             for bullet in self.root.layer_bulletsP[3]:
                 try:
@@ -129,13 +143,14 @@ class Boss(Entity):
                     self.surface = self.images[2][self.frame]
                     self.hp -= 1
                     if self.hp < 0:
+                        self.endtimer = 0
                         self.die = True
                         self.images = self.root.explosions[randint(0,4)]
 
 class Item(Entity):
     def __init__(self, root, rect=[160+32,100+32,64,64]):
         Entity.__init__(self, root, rect)
-        s = choice(("item", "gem", "itemrainbow"))
+        s = choice(("item", "gem"))
         self.images = self.root.images[s]
         sx, sy = 0.32, 0.2
         self.speed = [uniform(-0.8,0.4), uniform(-0.5,0.3)]
@@ -155,7 +170,7 @@ class Item(Entity):
 class Enemy(Entity):
     def __init__(self, root, rect=[160+32,100+32,64,64]):
         Entity.__init__(self, root, rect[:])
-        self.images = self.root.images["active"]
+        self.images = self.root.images["willie"][0]
         self.dspeed = (1.009+(self.root.level/200))
 
         scale = self.root.level
@@ -191,9 +206,10 @@ class Enemy(Entity):
 class DualSheetEnemy(Enemy):
     def __init__(self, root):
         Enemy.__init__(self, root)
-        self.sprite = randint((self.root.level*4),(self.root.level*4)+2)
+        i = (self.root.level*2)-1
+        self.sprite = randint((i*4),(i*4)+3)
         self.images = self.root.images["willie"][self.sprite]
-        self.framespeed = 20
+        self.framespeed = randint(10,20)
 
 
 class Player(Entity):
@@ -212,41 +228,63 @@ class Player(Entity):
         self.yaw = 0
         self.bulletspeed = 4
         self.pitch = 0
+        self.frame = 0
         self.t = 0
 
-    def update(self):
-        self.t += 1
-        if self.t > self.bulletspeed + randint(0,3):
-            #fire bullet hooray!
-            self.t = 0
-            dx, dy, dist = speedangle(160,100,self.rect[0],self.rect[1])
-            beam = Mouthbeams(self.root, [self.rect[0],self.rect[1], 5,5])
-            beam.speed = [(dx*dist)/80,(dy*dist)/80]
-            self.root.layer_bulletsP[4].append(beam)
+    def dying(self):
+        if self.die == False:
+            self.root.sounds["gameover"].play()
+            self.die = True
+            pygame.mixer.music.load("data/music/gameoverwait.ogg")
+            pygame.mixer.music.play(-1)
 
-        ix = int((self.rect[0]/320)*3)
-        iy = int((self.rect[1]/200)*5)
-        self.surface= self.images[iy][ix]
-        speed = 4
-        accel = 0.2
-        dx, dy, dist = speedangle(*self.root.mouse_pos, self.rect[0], self.rect[1])
-        mspeed = 16
-        self.speed[0] = (dx)*(dist/10)
-        self.speed[0] = clamp(self.speed[0], -mspeed/1.2,mspeed/1.2)
-        self.speed[1] = (dy)*(dist/10)
-        self.speed[1] = clamp(self.speed[1], -(mspeed/2),(mspeed/2))
-        self.yaw = (200 - (self.rect[1]/4))-75
-        self.pitch = (320 - (self.rect[0]/2)-(320/2))
+    def update(self):
+        if self.die:
+            self.t += 1
+            if self.t > 2:
+                self.t = 0
+                if self.frame > 40:
+                    self.root.game_over()
+                else:
+                    self.surface = self.root.explosions[0][self.frame]
+                    self.frame += 1
+        else:
+            self.t += 1
+            if self.t > self.bulletspeed + randint(0,3):
+                #fire bullet hooray!
+                self.t = 0
+                dx, dy, dist = speedangle(160,100,self.rect[0],self.rect[1])
+                beam = Mouthbeams(self.root, [self.rect[0],self.rect[1], 5,5])
+                beam.speed = [(dx*dist)/80,(dy*dist)/80]
+                self.root.layer_bulletsP[4].append(beam)
+
+            ix = int((self.rect[0]/320)*3)
+            iy = int((self.rect[1]/200)*5)
+            self.surface= self.images[iy][ix]
+            speed = 4
+            accel = 0.2
+            dx, dy, dist = speedangle(*self.root.mouse_pos, self.rect[0], self.rect[1])
+            mspeed = 16
+            self.speed[0] = (dx)*(dist/10)
+            self.speed[0] = clamp(self.speed[0], -mspeed/1.2,mspeed/1.2)
+            self.speed[1] = (dy)*(dist/10)
+            self.speed[1] = clamp(self.speed[1], -(mspeed/2),(mspeed/2))
+            self.yaw = (200 - (self.rect[1]/4))-75
+            self.pitch = (320 - (self.rect[0]/2)-(320/2))
 
 class Mouthbeams(Entity):
     def __init__(self, root, rect=[0,0,5,5]):
         Entity.__init__(self, root, rect)
         rc = (randint(128,255),randint(128,255),randint(128,255))
-        self.images = self.root.images["item"]
+        self.images = self.root.images["willie"][0]
         self.surface.fill(rc)
         self.distance = 64
         self.bullet = True
         self.layer = 4
+        self.root.sounds["mouthbeam0"].play()
+        #if randint(0,1) == 0:
+        #else:
+        #    self.root.sounds["mouthbeam1"].play()
 
     def update(self):
         self.move_from()

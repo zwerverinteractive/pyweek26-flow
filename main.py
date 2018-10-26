@@ -34,6 +34,7 @@ def sheetsheet(image, size):
 
 class Game():
     def __init__(self):
+        pygame.mixer.pre_init(44100, -16, 1, 512)
         pygame.init()
         self.fps = 60
         self.clock = pygame.time.Clock()
@@ -44,14 +45,6 @@ class Game():
         self.screen = pygame.Surface(self.screen_res)
         self.screen.set_alpha(50)
         self.buttons = [None, None, None, None, None]
-        warning = pygame.image.load("data/seisurewarning.png")
-        self.screen.blit(warning, (0,0))
-        pygame.transform.scale(self.screen, self.window_res, self.window)
-        pygame.display.flip()
-        while True:
-            self.input()
-            if self.buttons[1] == False:
-                break
         self.layers = []
         self.layer_bulletsP = []
         self.xs = 0
@@ -59,7 +52,7 @@ class Game():
         for i in range(10):
             self.layers.append([])
             self.layer_bulletsP.append([])
-        self.level = 1
+        self.level = 7
         self.started = False
         self.setup()
         for i in range(200):
@@ -79,21 +72,19 @@ class Game():
         self.images = {
             "title" : sheet(pygame.image.load("data/titlescreen.png"), (320,200)),
             "bosswarning" : sheet(pygame.image.load("data/bosswarning.png"), (117,54)),
+            "gameover" : sheet(pygame.image.load("data/gameover.png"), (320,200)),
             "player" : pygame.image.load("data/player.png"),
             "cracks" : sheet(pygame.image.load("data/cracks.png"), (128,128)),
-            "active" : sheet(pygame.image.load("data/floaters/active.png"), (64,64)),
-            "item" : sheet(pygame.image.load("data/floaters/item.png"), (64,64)),
-            "gem" : sheet(pygame.image.load("data/floaters/gem.png"), (64,64)),
-            "itemrainbow" : sheet(pygame.image.load("data/floaters/itemrainbow.png"), (64,64)),
-            "willie" : sheetsheet(pygame.image.load("data/floaters/willie.png"), (64,64)),
+            "willie" : sheetsheet(pygame.image.load("data/creatures.png"), (64,64)),
             #backgrounds
-            "water": sheet(pygame.image.load("data/bgs/water.png"), (160,1)),
-            "pizza": sheet(pygame.image.load("data/bgs/pizza.png"), (160,1)),
-            "flowers": sheet(pygame.image.load("data/bgs/flowers.png"), (160,1)),
-            "flower": sheet(pygame.image.load("data/bgs/flower.png"), (160,1)),
-            "floor": sheet(pygame.image.load("data/bgs/floor.png"), (160,1)),
-            "eye": sheet(pygame.image.load("data/bgs/eye.png"), (160,1)),
+            "backgrounds" : sheet(pygame.image.load("data/backgrounds.png"), (160,160)),
         }
+        backgrounds = self.images["backgrounds"]
+        self.images["backgrounds"] = []
+        for bg in backgrounds:
+            self.images["backgrounds"].append(sheet(bg, (160,1)))
+
+
         self.explosions = [
             sheet(pygame.image.load("data/explosions/1.png"), (64,64)),
             sheet(pygame.image.load("data/explosions/2.png"), (64,64)),
@@ -102,35 +93,82 @@ class Game():
             sheet(pygame.image.load("data/explosions/5.png"), (64,64)),
         ]
         self.bosses = []
-        for i in range(7):
+        for i in range(8):
             self.bosses.append([
                 sheet(pygame.image.load("data/boss/boss"+str(i+1)+".png"), (320,200)),
                 sheet(pygame.image.load("data/boss/boss"+str(i+1)+"-HIT.png"), (320,200)),
                 sheet(pygame.image.load("data/boss/boss"+str(i+1)+"-WHITE.png"), (320,200)),
             ])
-        self.timer = 0
-        self.boss = None
-        self.xs = 1
-        self.stripes = False
+
+        self.sounds = {
+            "gameover" : pygame.mixer.Sound("data/sounds/gameover.ogg"),
+            "gamestart": pygame.mixer.Sound("data/sounds/gamestart.ogg"),
+            "mouthbeam0": pygame.mixer.Sound("data/sounds/mouthbeam0.ogg"),
+            "mouthbeam1": pygame.mixer.Sound("data/sounds/mouthbeam0.ogg"),
+            "alarm": pygame.mixer.Sound("data/sounds/alarm.ogg"),
+        }
+
         self.bg0 = pygame.Surface((320/2,200))
         self.bg0.set_colorkey((0,0,0))
         self.bg1 = pygame.Surface((320/2,200))
         self.current_image = None
         self.zwischen = pygame.Surface((320, 200))
         m = self.scale_mouse(pygame.mouse.get_pos())
-        self.gamespeed = 0
-        self.blur = 0
+        self.timer = 0
+        self.boss = None
+        self.xs = 1
+        self.stripes = False
         self.overwrite_colors = [None, None]
+        self.blur = 0
+        self.gamespeed = 0
         self.cracks = []
+        self.gameover = False
+        self.go = 0
         seed(self.level)
+        warning = pygame.image.load("data/seisurewarning.png")
+        self.screen.blit(warning, (0,0))
+        pygame.transform.scale(self.screen, self.window_res, self.window)
+        pygame.display.flip()
+        while True:
+            self.input()
+            if self.buttons[1] == False:
+                break
 
     def new_game(self):
+        self.rows = [
+            [[0,128,0], 320, [0,0,0,0]],
+            [[0,255,0], 200, [0,0,0,0]],
+            [[0,0,255], 160, [0,0,0,0]],
+            [[0,0,128], 100, [0,0,0,0]],
+            [[0,255,255],70, [0,0,0,0]],
+            [[0,128,128],30, [0,0,0,0]],
+        ]
+        rc = (randint(0,255),randint(0,255),randint(0,255))
+        self.zwischen.fill(rc)
+        self.bg0.fill((0,0,0))
+        self.bg1.fill(rc)
+        self.sounds["gamestart"].play()
+        self.layers = []
+        self.layer_bulletsP = []
+        self.xs = 0
+        self.ys = 0
+        pygame.mixer.music.load("data/music/goow.ogg")
+        pygame.mixer.music.play(-1)
+        self.wanringz = False
+        for i in range(10):
+            self.layers.append([])
+            self.layer_bulletsP.append([])
         m = self.scale_mouse(pygame.mouse.get_pos())
         self.player = Player(self, [m[0],m[1],32,32])
         self.layers[5].append(self.player)
         self.level = 0.5
+        self.gamespeed = 0
         seed(self.level)
+        self.stripes = False
+        self.overwrite_colors = [None, None]
+        self.timer = 0
         self.started = True
+        self.gameover = False
         self.blur = 50
 
     def next_level(self):
@@ -151,15 +189,28 @@ class Game():
         self.level += 0.5
         self.blur = 50
         seed(self.level)
+        pygame.mixer.music.load("data/music/goow.ogg")
+        pygame.mixer.music.play(-1)
 
     def hit(self, rect):
         self.blur += 5
         self.cracks.append([randint(0,3), rect, 255])
         self.screen.fill((255,0,0))
 
+    def game_over(self):
+        self.gameover = True
+
     def update(self):
+        if len(self.cracks) > 5:
+            self.player.dying()
+            self.cracks = []
         self.input()
-        if self.started:
+        if self.gameover:
+            self.game_over()
+            if self.buttons[1] == False:
+                self.gameover = False
+                self.new_game()
+        elif self.started:
             self.dt += 0.001
             #BOSS
             self.timer += 0.001
@@ -167,6 +218,8 @@ class Game():
                 for i in range(2):
                     self.layers[i] = []
                 if self.gamespeed > 198 and self.gamespeed < 200:
+                    pygame.mixer.music.load("data/music/boss.ogg")
+                    pygame.mixer.music.play(-1)
                     self.boss = Boss(self)
                     self.layers[2].append(self.boss)
                     self.gamespeed = 201
@@ -174,8 +227,11 @@ class Game():
                     self.stripes = False
                     self.blur = 0
                 elif self.gamespeed <= 201:
+                    if self.wanringz == False:
+                        self.wanrings = True
+                        self.sounds["alarm"].play()
                     self.blur = 80
-                    self.screen.blit(self.images["bosswarning"][randint(0,1)], (160-58,0))
+                    self.screen.blit(self.images["bosswarning"][randint(0,1)], (160-58,100-27))
                     self.gamespeed += 1
             else:
                 #SPEED UP
@@ -183,17 +239,15 @@ class Game():
                     self.gamespeed += 0.01
                 if randint(0,20 + (20-int(self.level))) == 0:
                     self.layers[0] = [DualSheetEnemy(self)] + self.layers[0]
-                if randint(0,500) == 0:
-                    self.layers[0] = [Item(self)] + self.layers[0]
+                #IF THERE'S TIME LEFT!
+                #if randint(0,500) == 0:
+                #    self.layers[0] = [Item(self)] + self.layers[0]
 
                 if self.current_image == None:
                     if int((self.level*2)%2) == 0:
-                        i = ("water", "pizza", "flower", "flowers", "floor", "eye")
-                        img = i[int(len(i)%(self.level))]
-                        img = i[int(self.level/2)%len(i)]
-
+                        img = int(self.level)
                         print(img)
-                        self.current_image = self.images[img]
+                        self.current_image = self.images["backgrounds"][img]
                         self.image_y = 0
                     else:
                         self.current_image = None
@@ -213,6 +267,8 @@ class Game():
             if self.buttons[1]:
                 self.new_game()
         #DRAW
+        if randint(0,500) == 0:
+            self.stripes = False
 
         self.xs = abs(sin(self.dt*3)*3)
         self.ys = abs(sin(self.dt*2)*320)+1
@@ -307,7 +363,11 @@ class Game():
                 self.cracks.remove(crack)
         if self.started == False:
             self.screen.blit(self.images["title"][self.dt%2], (0,0))
-
+        if self.gameover == True:
+            if self.go == 0: self.go = 1
+            else: self.go = 0
+            self.gameover = True
+            self.screen.blit(self.images["gameover"][self.go], (0,0))
 
     def start(self):
         self.running = True

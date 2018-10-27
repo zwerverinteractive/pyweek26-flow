@@ -130,11 +130,29 @@ class Game():
         pygame.transform.scale(self.screen, self.window_res, self.window)
         pygame.display.flip()
         while True:
+            self.clock.tick(30)
             self.input()
             if self.buttons[1] == False:
                 break
+        credits = sheet(pygame.image.load("data/credit.png"), (320,200))
+        pygame.transform.scale(self.screen, self.window_res, self.window)
+        pygame.display.flip()
+        self.screen.fill((0,0,0))
+        d = 0
+        while True:
+            if d == 0: d = 1
+            else: d = 0
+            self.clock.tick(60)
+            self.input()
+            self.screen.blit(credits[d], (0,0))
+            pygame.transform.scale(self.screen, self.window_res, self.window)
+            pygame.display.flip()
+            if self.buttons[1] == False:
+                break
+        self.titlesound = pygame.mixer.Sound("data/sounds/titelvox.ogg")
+        self.titlesound.play()
 
-    def new_game(self):
+    def new_game(self, l=0.5):
         self.rows = [
             [[0,128,0], 320, [0,0,0,0]],
             [[0,255,0], 200, [0,0,0,0]],
@@ -152,8 +170,13 @@ class Game():
         self.layer_bulletsP = []
         self.xs = 0
         self.ys = 0
-        pygame.mixer.music.load("data/music/goow.ogg")
+        pygame.mixer.music.load("data/music/1.ogg")
         pygame.mixer.music.play(-1)
+        try:
+            self.titlesound.stop()
+        except:
+            pass
+        self.titlesound = None
         self.wanringz = False
         for i in range(10):
             self.layers.append([])
@@ -161,7 +184,7 @@ class Game():
         m = self.scale_mouse(pygame.mouse.get_pos())
         self.player = Player(self, [m[0],m[1],32,32])
         self.layers[5].append(self.player)
-        self.level = 0.5
+        self.level = l
         self.gamespeed = 0
         seed(self.level)
         self.stripes = False
@@ -189,8 +212,12 @@ class Game():
         self.level += 0.5
         self.blur = 50
         seed(self.level)
-        pygame.mixer.music.load("data/music/goow.ogg")
+        pygame.mixer.music.load("data/music/"+str(int(self.level*2))+".ogg")
         pygame.mixer.music.play(-1)
+        i = randint(0,1)
+        sound = pygame.mixer.Sound("data/sounds/leveltrans"+str(i)+".ogg")
+        sound.play()
+
 
     def hit(self, rect):
         self.blur += 5
@@ -206,10 +233,10 @@ class Game():
             self.cracks = []
         self.input()
         if self.gameover:
-            self.game_over()
             if self.buttons[1] == False:
                 self.gameover = False
-                self.new_game()
+                self.level -= 1
+                self.new_game(self.level)
         elif self.started:
             self.dt += 0.001
             #BOSS
@@ -218,14 +245,14 @@ class Game():
                 for i in range(2):
                     self.layers[i] = []
                 if self.gamespeed > 198 and self.gamespeed < 200:
-                    pygame.mixer.music.load("data/music/boss.ogg")
-                    pygame.mixer.music.play(-1)
                     self.boss = Boss(self)
                     self.layers[2].append(self.boss)
                     self.gamespeed = 201
                     self.current_image = None
                     self.stripes = False
                     self.blur = 0
+                    pygame.mixer.music.load("data/music/boss.ogg")
+                    pygame.mixer.music.play(-1)
                 elif self.gamespeed <= 201:
                     if self.wanringz == False:
                         self.wanrings = True

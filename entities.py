@@ -101,6 +101,12 @@ class Boss(Entity):
         self.images = self.root.bosses[b]
         self.timer = 0
         self.hp = hp[b]
+        try:
+            sound = pygame.mixer.Sound("data/sounds/taunts/"+str(b+1)+".ogg")
+            sound.play()
+        except:
+            pass
+
 
     def update(self):
 
@@ -143,6 +149,8 @@ class Boss(Entity):
                     self.surface = self.images[2][self.frame]
                     self.hp -= 1
                     if self.hp < 0:
+                        sound = pygame.mixer.Sound("data/sounds/bossdeath.ogg")
+                        sound.play()
                         self.endtimer = 0
                         self.die = True
                         self.images = self.root.explosions[randint(0,4)]

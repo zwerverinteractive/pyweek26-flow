@@ -96,7 +96,7 @@ class Boss(Entity):
         ]
         self.endtimer = 0
         s = [5, 10, 5, 2, 5, 5, 5, 5 ,5,5,10,15]
-        hp = [50, 50, 50, 50, 50, 50, 50,50,50,50]
+        hp = [50, 50, 50, 30, 30, 50, 50,50,50,50]
         self.framespeed = s[b]
         self.images = self.root.bosses[b]
         self.timer = 0

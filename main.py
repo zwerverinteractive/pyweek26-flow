@@ -36,6 +36,7 @@ class Game():
     def __init__(self):
         pygame.mixer.pre_init(44100, -16, 32, 512)
         pygame.init()
+        pygame.display.set_caption("Super Flowmaster")
         self.fps = 60
         self.clock = pygame.time.Clock()
         self.dt = 0
@@ -275,7 +276,7 @@ class Game():
         if self.gameover:
             if self.buttons[1] == False:
                 self.gameover = False
-                self.level -= 1
+                self.level -= 0.5
                 self.new_game(self.level)
         elif self.started:
             self.dt += 0.001

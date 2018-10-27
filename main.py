@@ -94,6 +94,7 @@ class Game():
             sheet(pygame.image.load("data/explosions/4.png"), (64,64)),
             sheet(pygame.image.load("data/explosions/5.png"), (64,64)),
             sheet(pygame.image.load("data/explosions/boss.png"), (320,200)),
+            sheet(pygame.image.load("data/explosions/7.png"), (64,64)),
         ]
         self.bosses = []
         for i in range(8):
@@ -136,20 +137,32 @@ class Game():
         self.gameover = False
         self.go = 0
         seed(self.level)
-        warning = pygame.image.load("data/seisurewarning.png")
-        self.screen.blit(warning, (0,0))
+        warning = sheet(pygame.image.load("data/seisurewarning.png"), (320,200))
+
         pygame.transform.scale(self.screen, self.window_res, self.window)
         pygame.display.flip()
+        pygame.mixer.music.load("data/sounds/seizurewarning.ogg")
+        pygame.mixer.music.play()
+        d = 0
         while True:
-            self.clock.tick(30)
+            self.screen.fill((0,0,0))
+            if d == 0: d = 1
+            else: d = 0
+            self.clock.tick(60)
             self.input()
+            self.screen.blit(warning[d], (0,0))
+            pygame.transform.scale(self.screen, self.window_res, self.window)
+            pygame.display.flip()
             if self.buttons[1] == False:
+                pygame.mixer.music.stop()
                 break
         credits = sheet(pygame.image.load("data/credit.png"), (320,200))
         pygame.transform.scale(self.screen, self.window_res, self.window)
         pygame.display.flip()
         self.screen.fill((0,0,0))
         d = 0
+        pygame.mixer.music.load("data/sounds/momo.ogg")
+        pygame.mixer.music.play()
         while True:
             if d == 0: d = 1
             else: d = 0

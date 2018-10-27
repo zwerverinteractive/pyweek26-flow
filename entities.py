@@ -253,7 +253,7 @@ class Player(Entity):
                 if self.frame > 40:
                     self.root.game_over()
                 else:
-                    self.surface = self.root.explosions[0][self.frame]
+                    self.surface = self.root.explosions[6][self.frame]
                     self.frame += 1
         else:
             self.t += 1

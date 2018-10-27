@@ -90,7 +90,6 @@ class Boss(Entity):
         Entity.__init__(self, root, rect)
         b = int(self.root.level*2)-1
         self.b = b
-        print(self.root.level, b)
         self.endtimers = [
             1000, 1000, 250, 1000, 600,
             800, 1000, 1000, 1000, 1000,
@@ -195,7 +194,6 @@ class Enemy(Entity):
         #HITBYBULLET
         if not self.die and self.distance > 10:
             for b in self.root.layer_bulletsP[self.layer]:
-                #print(self.size, self.rect)
                 if b.rect[0] > (self.center[0]) and b.rect[0] < self.center[0]+self.size[0]:
                     if b.rect[1] > (self.center[1]) and b.rect[1] < self.center[1]+self.size[1]:
                         self.images = self.root.explosions[randint(0,4)]

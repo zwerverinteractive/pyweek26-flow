@@ -163,7 +163,7 @@ class Game():
         pygame.mixer.music.load("data/music/title.ogg")
         pygame.mixer.music.play(-1)
 
-    def new_game(self, l=2.5):
+    def new_game(self, l=0.5):
         if l < 0.5:
             l = 0.5
         self.rows = [

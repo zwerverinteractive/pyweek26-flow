@@ -34,7 +34,7 @@ def sheetsheet(image, size):
 
 class Game():
     def __init__(self):
-        pygame.mixer.pre_init(44100, -16, 8, 512)
+        pygame.mixer.pre_init(44100, -16, 32, 512)
         pygame.init()
         self.fps = 60
         self.clock = pygame.time.Clock()
@@ -49,6 +49,7 @@ class Game():
         self.layer_bulletsP = []
         self.xs = 0
         self.ys = 0
+        self.mouthbeem = False
         for i in range(10):
             self.layers.append([])
             self.layer_bulletsP.append([])
@@ -73,6 +74,7 @@ class Game():
             "title" : sheet(pygame.image.load("data/titlescreen.png"), (320,200)),
             "bosswarning" : sheet(pygame.image.load("data/bosswarning.png"), (117,54)),
             "gameover" : sheet(pygame.image.load("data/gameover.png"), (320,200)),
+            "mouthbeem" : sheet(pygame.image.load("data/mouthbeem.png"), (320,200)),
             "player" : pygame.image.load("data/player.png"),
             "cracks" : sheet(pygame.image.load("data/cracks.png"), (128,128)),
             "willie" : sheetsheet(pygame.image.load("data/creatures.png"), (64,64)),
@@ -162,6 +164,7 @@ class Game():
         self.titlesound.play()
         pygame.mixer.music.load("data/music/title.ogg")
         pygame.mixer.music.play(-1)
+        self.mb = 0
 
     def new_game(self, l=0.5):
         if l < 0.5:
@@ -183,12 +186,14 @@ class Game():
         self.layer_bulletsP = []
         self.xs = 0
         self.ys = 0
+        self.wanringz = False
         pygame.mixer.music.load("data/music/1.ogg")
         pygame.mixer.music.play(-1)
         try:
             self.titlesound.stop()
         except:
             pass
+        self.mouthbeem = False
         self.titlesound = None
         self.wanringz = False
         for i in range(10):
@@ -224,6 +229,7 @@ class Game():
         self.gamespeed = 0
         self.timer = 0
         self.level += 0.5
+        self.wanringz = False
         self.blur = 50
         self.stripes = False
         self.current_image = None
@@ -231,6 +237,10 @@ class Game():
         pygame.mixer.music.load("data/music/"+str(int(self.level*2))+".ogg")
         pygame.mixer.music.play(-1)
         i = randint(0,2)
+        if i == 0:
+            self.mouthbeem = True
+        else:
+            self.mouthbeem = False
         sound = pygame.mixer.Sound("data/sounds/leveltrans"+str(i)+".ogg")
         sound.play()
 
@@ -270,7 +280,8 @@ class Game():
                     pygame.mixer.music.play(-1)
                 elif self.gamespeed <= 201:
                     if self.wanringz == False:
-                        self.wanrings = True
+                        self.wanringz = True
+                        pygame.mixer.music.stop()
                         self.sounds["alarm"].play()
                     self.blur = 80
                     self.screen.blit(self.images["bosswarning"][randint(0,1)], (160-58,100-27))
@@ -412,6 +423,10 @@ class Game():
             else: self.go = 0
             self.gameover = True
             self.screen.blit(self.images["gameover"][self.go], (0,0))
+        if self.mouthbeem and self.gamespeed < 1:
+            if self.mb == 0: self.mb = 1
+            else: self.mb = 0
+            self.screen.blit(self.images["mouthbeem"][self.mb], (0,0))
 
     def start(self):
         self.running = True

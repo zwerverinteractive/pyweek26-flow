@@ -91,7 +91,7 @@ class Boss(Entity):
         b = int(self.root.level*2)-1
         self.b = b
         self.endtimers = [
-            1000, 1000, 250, 1000, 600,
+            1000, 1000, 300, 1000, 600,
             800, 1000, 1000, 1000, 1000,
         ]
         self.endtimer = 0
@@ -202,6 +202,7 @@ class Enemy(Entity):
                         self.die = True
                         self.framespeed = 1
                         s = randint(1,4)
+                        self.root.sounds["xpl"+str(s)].set_volume(self.distance/64)
                         self.root.sounds["xpl"+str(s)].play()
             if self.layer > 5:
                 self.root.hit(self.rect)

@@ -89,14 +89,15 @@ class Boss(Entity):
     def __init__(self, root, rect=[160,100,320,200]):
         Entity.__init__(self, root, rect)
         b = int(self.root.level*2)-1
+        self.b = b
         print(self.root.level, b)
         self.endtimers = [
-            500, 500, 500, 500, 500,
-            500, 500, 500, 3000, 2000,
+            1000, 1000, 250, 1000, 600,
+            800, 1000, 1000, 1000, 1000,
         ]
         self.endtimer = 0
-        s = [5, 10, 5, 2, 5, 5, 5, 5 ,5,5,10,15]
-        hp = [50, 50, 50, 30, 30, 50, 50,50,50,50]
+        s = [5, 10, 5, 5, 2, 5, 5, 5 ,5,5,10,15]
+        hp = [50, 50, 30, 120, 30, 50, 50,50,50,50]
         self.framespeed = s[b]
         self.images = self.root.bosses[b]
         self.timer = 0
@@ -109,7 +110,6 @@ class Boss(Entity):
 
 
     def update(self):
-
         self.timer += 1
         if self.timer > self.framespeed:
             self.timer = 0
@@ -124,17 +124,12 @@ class Boss(Entity):
                 if self.frame >= len(self.images[0]):
                     self.frame = 0
         if self.die:
-
-            try:
-                self.surface = pygame.transform.scale(self.images[self.frame], (320,200))
-            except:
-                self.frame = 0
-                self.surface = pygame.transform.scale(self.images[self.frame], (320,200))
+            self.surface = self.images[self.frame]
         else:
             self.endtimer += 1
             rc = (randint(0,255),randint(0,255),randint(0,255))
 
-            w = (320 - (320/1000) * self.endtimer)
+            w = (320 - (320/self.endtimers[self.b]) * self.endtimer)
             if w <= 1:
                 self.root.player.dying()
             self.root.screen.fill(rc, (0,0,w,20))
@@ -145,15 +140,17 @@ class Boss(Entity):
                 except:
                     pixel_hit = (0,0,0,255)
                 if pixel_hit == (0,0,255,255):
+                    self.root.sounds["bew"].play()
                     self.root.layer_bulletsP[3].remove(bullet)
                     self.surface = self.images[2][self.frame]
                     self.hp -= 1
                     if self.hp < 0:
-                        sound = pygame.mixer.Sound("data/sounds/bossdeath.ogg")
-                        sound.play()
+                        self.sound = pygame.mixer.Sound("data/sounds/bossdeath.ogg")
+                        self.sound.play()
                         self.endtimer = 0
+                        self.framespeed = 1
                         self.die = True
-                        self.images = self.root.explosions[randint(0,4)]
+                        self.images = self.root.explosions[5]
 
 class Item(Entity):
     def __init__(self, root, rect=[160+32,100+32,64,64]):
@@ -179,7 +176,7 @@ class Enemy(Entity):
     def __init__(self, root, rect=[160+32,100+32,64,64]):
         Entity.__init__(self, root, rect[:])
         self.images = self.root.images["willie"][0]
-        self.dspeed = (1.009+(self.root.level/200))
+        self.dspeed = (1.01+(self.root.level/200))
 
         scale = self.root.level
         xmax = ((self.dspeed*scale)/8)
@@ -206,6 +203,8 @@ class Enemy(Entity):
                         b.die = True
                         self.die = True
                         self.framespeed = 1
+                        s = randint(1,4)
+                        self.root.sounds["xpl"+str(s)].play()
             if self.layer > 5:
                 self.root.hit(self.rect)
                 self.root.layers[self.layer].remove(self)
@@ -241,6 +240,7 @@ class Player(Entity):
 
     def dying(self):
         if self.die == False:
+            self.speed = [0,0]
             self.root.sounds["gameover"].play()
             self.die = True
             pygame.mixer.music.load("data/music/gameoverwait.ogg")
@@ -289,6 +289,7 @@ class Mouthbeams(Entity):
         self.distance = 64
         self.bullet = True
         self.layer = 4
+        self.root.sounds["mouthbeam0"].stop()
         self.root.sounds["mouthbeam0"].play()
         #if randint(0,1) == 0:
         #else:

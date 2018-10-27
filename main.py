@@ -34,7 +34,7 @@ def sheetsheet(image, size):
 
 class Game():
     def __init__(self):
-        pygame.mixer.pre_init(44100, -16, 1, 512)
+        pygame.mixer.pre_init(44100, -16, 8, 512)
         pygame.init()
         self.fps = 60
         self.clock = pygame.time.Clock()
@@ -91,6 +91,7 @@ class Game():
             sheet(pygame.image.load("data/explosions/3.png"), (64,64)),
             sheet(pygame.image.load("data/explosions/4.png"), (64,64)),
             sheet(pygame.image.load("data/explosions/5.png"), (64,64)),
+            sheet(pygame.image.load("data/explosions/boss.png"), (320,200)),
         ]
         self.bosses = []
         for i in range(8):
@@ -106,6 +107,14 @@ class Game():
             "mouthbeam0": pygame.mixer.Sound("data/sounds/mouthbeam0.ogg"),
             "mouthbeam1": pygame.mixer.Sound("data/sounds/mouthbeam0.ogg"),
             "alarm": pygame.mixer.Sound("data/sounds/alarm.ogg"),
+            "bew": pygame.mixer.Sound("data/sounds/beww.ogg"),
+            "xpl1": pygame.mixer.Sound("data/sounds/xpl1.ogg"),
+            "xpl2": pygame.mixer.Sound("data/sounds/xpl2.ogg"),
+            "xpl3": pygame.mixer.Sound("data/sounds/xpl3.ogg"),
+            "xpl4": pygame.mixer.Sound("data/sounds/xpl3.ogg"),
+            "glass1": pygame.mixer.Sound("data/sounds/glass1.ogg"),
+            "glass2": pygame.mixer.Sound("data/sounds/glass2.ogg"),
+            "glass3": pygame.mixer.Sound("data/sounds/glass3.ogg"),
         }
 
         self.bg0 = pygame.Surface((320/2,200))
@@ -151,8 +160,12 @@ class Game():
                 break
         self.titlesound = pygame.mixer.Sound("data/sounds/titelvox.ogg")
         self.titlesound.play()
+        pygame.mixer.music.load("data/music/title.ogg")
+        pygame.mixer.music.play(-1)
 
-    def new_game(self, l=0.5):
+    def new_game(self, l=2.5):
+        if l < 0.5:
+            l = 0.5
         self.rows = [
             [[0,128,0], 320, [0,0,0,0]],
             [[0,255,0], 200, [0,0,0,0]],
@@ -188,6 +201,7 @@ class Game():
         self.gamespeed = 0
         seed(self.level)
         self.stripes = False
+        self.current_image = None
         self.overwrite_colors = [None, None]
         self.timer = 0
         self.started = True
@@ -211,16 +225,19 @@ class Game():
         self.timer = 0
         self.level += 0.5
         self.blur = 50
+        self.stripes = False
+        self.current_image = None
         seed(self.level)
         pygame.mixer.music.load("data/music/"+str(int(self.level*2))+".ogg")
         pygame.mixer.music.play(-1)
-        i = randint(0,1)
+        i = randint(0,2)
         sound = pygame.mixer.Sound("data/sounds/leveltrans"+str(i)+".ogg")
         sound.play()
 
 
     def hit(self, rect):
         self.blur += 5
+        self.sounds["glass"+str(randint(1,3))].play()
         self.cracks.append([randint(0,3), rect, 255])
         self.screen.fill((255,0,0))
 
@@ -228,7 +245,7 @@ class Game():
         self.gameover = True
 
     def update(self):
-        if len(self.cracks) > 5:
+        if len(self.cracks) > 3:
             self.player.dying()
             self.cracks = []
         self.input()
@@ -248,8 +265,6 @@ class Game():
                     self.boss = Boss(self)
                     self.layers[2].append(self.boss)
                     self.gamespeed = 201
-                    self.current_image = None
-                    self.stripes = False
                     self.blur = 0
                     pygame.mixer.music.load("data/music/boss.ogg")
                     pygame.mixer.music.play(-1)
@@ -272,12 +287,14 @@ class Game():
 
                 if self.current_image == None:
                     if int((self.level*2)%2) == 0:
-                        img = int(self.level)
-                        print(img)
-                        self.current_image = self.images["backgrounds"][img]
+                        img = int(self.level*2)-2
+                        self.current_image = self.images["backgrounds"][int(self.level*2)-2]
                         self.image_y = 0
                     else:
                         self.current_image = None
+                elif self.gamespeed > 5 and not self.current_image == self.images["backgrounds"][int(self.level*2)-1]:
+                    self.current_image = self.images["backgrounds"][int(self.level*2)-1]
+                    self.image_y = 0
             #    self.layers[1].append(Enemy(self, [randint(32,320-32),-64,32,32]))
             #UPDATE
 
